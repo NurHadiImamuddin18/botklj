@@ -1,1 +1,1 @@
-worker: python bot_sspart.py
+worker: python main.py
