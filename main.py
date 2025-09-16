@@ -10,7 +10,7 @@ import json
 import subprocess
 
 TELEGRAM_BOT_TOKEN = "8438813402:AAHx98XuJj7zBWO-AP1B_xzp19a8oCpUKs8"
-TELEGRAM_CHAT_IDS = ["1001714188559"]
+TELEGRAM_CHAT_IDS = ["-1001714188559"]
 API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
 # --- Logging ---
