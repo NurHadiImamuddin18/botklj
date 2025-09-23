@@ -535,13 +535,13 @@ def run_full_task(target_chat_ids=None):
                 page_looker.mouse.click(10, 10)
                 time.sleep(2)
                 page_looker.screenshot(path=full_screenshot_looker, full_page=True)
-                send_screenshot_to_telegram(full_screenshot_looker, "*DASHBOARD PROVISIONING TSEL*")
+                send_screenshot_to_telegram(full_screenshot_looker, "DASHBOARD PROVISIONING TSEL")
 
                 actions_looker = [
                     (page_looker.locator(".lego-component.simple-table > .front > .component").first,
-                     "*Produktifitas Teknisi PSB Klojen*"),
+                     "Produktifitas Teknisi PSB Klojen"),
                     (page_looker.locator(".lego-component.simple-table.cd-mq84137tsd > .front > .component"),
-                     "*Detail Order PSB Klojen*"),
+                     "Detail Order PSB Klojen"),
                 ]
                 for idx, (locator, caption) in enumerate(actions_looker, start=1):
                     filename = f"click_looker_{idx}.png"
@@ -569,9 +569,9 @@ def run_full_task(target_chat_ids=None):
                 page_sheet = context_sheet.new_page()
 
                 sheet_steps = [
-                    ("D9:J23", "sheet_click_1.png", "*unspec B2C Klojen*"),
-                    ("D30:I44", "sheet_click_2.png", "*KLOJEN - UNSPEC (KLIRING)*"),
-                    ("M9:T24", "sheet_click_3.png", "*Unspec B2B Klojen*"),
+                    ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen"),
+                    ("D30:I44", "sheet_click_2.png", "KLOJEN - UNSPEC (KLIRING)"),
+                    ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
                 ]
                 for range_value, filename, caption in sheet_steps:
                     try:
