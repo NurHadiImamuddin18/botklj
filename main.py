@@ -17,15 +17,15 @@ TELEGRAM_CHAT_IDS = ["-1002755104290","-1001714188559","-1002033158680"]
 # === Mapping caption -> target chat_id ===
 GROUP_TARGETS = {
     # WO DAN QC2 KLJ + MAGANG KLJ
-    "*DASHBOARD PROVISIONING TSEL*": ["-1002755104290", "-1001714188559"],
-    "*Produktifitas Teknisi PSB Klojen*": ["-1002755104290", "-1001714188559"],
+    "DASHBOARD PROVISIONING TSEL": ["-1002755104290", "-1001714188559"],
+    "Produktifitas Teknisi PSB Klojen": ["-1002755104290", "-1001714188559"],
 
     # LAPHAR KLOJEN + MAGANG KLJ
-    "*unspec B2C Klojen*": ["-1002033158680", "-1001714188559"],
-    "*KLOJEN - UNSPEC (KLIRING)*": ["-1002033158680", "-1001714188559"],
+    "unspec B2C Klojen": ["-1002033158680", "-1001714188559"],
+    "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680", "-1001714188559"],
 
     # Hanya ke MAGANG KLJ
-    "*Unspec B2B Klojen*": ["-1001714188559"],
+    "Unspec B2B Klojen": ["-1001714188559"],
 }
 
 # === Fungsi kirim screenshot ke grup sesuai caption ===
