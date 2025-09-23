@@ -163,11 +163,24 @@ def format_datetime_with_wib(dt):
         return str(dt)
 
 
-# --- Kirim foto + caption ---
-def send_screenshot_to_telegram(image_path, caption, chat_ids):
+# --- Kirim foto + caption sesuai GROUP_TARGETS ---
+def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
     if not os.path.exists(image_path):
         logging.error(f"❌ File tidak ditemukan: {image_path}")
         return
+
+    # Tentukan daftar tujuan:
+    if target_chat_ids:
+        # Jika manual trigger /start -> pakai target_chat_ids
+        chat_ids = target_chat_ids
+    else:
+        # Kalau tidak -> ambil dari GROUP_TARGETS sesuai caption
+        chat_ids = GROUP_TARGETS.get(caption, [])
+
+    if not chat_ids:
+        logging.warning(f"⚠️ Tidak ada grup tujuan untuk caption: {caption}")
+        return
+
     for chat_id in chat_ids:
         try:
             with open(image_path, "rb") as photo:
@@ -177,14 +190,18 @@ def send_screenshot_to_telegram(image_path, caption, chat_ids):
                     files={"photo": photo}
                 )
                 resp.raise_for_status()
-            logging.info(f"✅ {image_path} terkirim ke {chat_id}")
+            logging.info(f"✅ {image_path} terkirim ke {chat_id} ({caption})")
         except requests.exceptions.RequestException as e:
             logging.error(f"❌ Gagal kirim {image_path} ke {chat_id}: {e}")
         except Exception as e:
             logging.error(f"❌ Error tak terduga saat kirim {image_path} ke {chat_id}: {e}")
-    if os.path.exists(image_path):
+
+    # Hapus file setelah terkirim
+    try:
         os.remove(image_path)
         logging.info(f"🗑️ File '{image_path}' dihapus setelah pengiriman.")
+    except Exception as e:
+        logging.warning(f"⚠️ Gagal menghapus file {image_path}: {e}")
 
 
 # --- Kirim pesan teks ---
