@@ -12,7 +12,7 @@ import requests
 import logging
 
 TELEGRAM_BOT_TOKEN = "8438813402:AAHx98XuJj7zBWO-AP1B_xzp19a8oCpUKs8"
-
+TELEGRAM_CHAT_IDS = ["-1002755104290","-1001714188559","-1002033158680"]
 
 # === Mapping caption -> target chat_id ===
 GROUP_TARGETS = {
@@ -165,6 +165,14 @@ def format_datetime_with_wib(dt):
 
 # --- Kirim foto + caption sesuai GROUP_TARGETS ---
 def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
+    """
+    Mengirim screenshot ke Telegram.
+
+    - Jika target_chat_ids diberikan, akan dikirim ke chat tersebut.
+    - Jika tidak, akan mencari caption di GROUP_TARGETS (exact match).
+    - File akan dihapus hanya sekali setelah semua pengiriman selesai.
+    """
+
     if not os.path.exists(image_path):
         logging.error(f"❌ File tidak ditemukan: {image_path}")
         return
@@ -173,12 +181,7 @@ def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
     if target_chat_ids:
         chat_ids = target_chat_ids
     else:
-        # Ambil dari GROUP_TARGETS (cari key yang mengandung caption)
-        chat_ids = []
-        for key, ids in GROUP_TARGETS.items():
-            if key in caption:
-                chat_ids = ids
-                break
+        chat_ids = GROUP_TARGETS.get(caption, [])
 
     if not chat_ids:
         logging.warning(f"⚠️ Tidak ada grup tujuan untuk caption: {caption}")
@@ -201,20 +204,13 @@ def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
         except Exception as e:
             logging.error(f"❌ Error tak terduga saat kirim {image_path} ke {chat_id}: {e}")
 
+    # Hapus file sekali setelah semua chat selesai
     if success:
         try:
             os.remove(image_path)
             logging.info(f"🗑️ File '{image_path}' dihapus setelah pengiriman.")
         except Exception as e:
             logging.warning(f"⚠️ Gagal menghapus file {image_path}: {e}")
-
-
-    # Hapus file setelah terkirim
-    try:
-        os.remove(image_path)
-        logging.info(f"🗑️ File '{image_path}' dihapus setelah pengiriman.")
-    except Exception as e:
-        logging.warning(f"⚠️ Gagal menghapus file {image_path}: {e}")
 
 
 # --- Kirim pesan teks ---
@@ -498,7 +494,7 @@ def run_full_task(target_chat_ids=None):
 
     is_manual_trigger = False
     if not target_chat_ids:
-        target_chat_ids = TELEGRAM_CHAT_IDS
+        target_chat_ids = GROUP_TARGETS
     else:
         is_manual_trigger = True
 
@@ -539,7 +535,7 @@ def run_full_task(target_chat_ids=None):
                 page_looker.mouse.click(10, 10)
                 time.sleep(2)
                 page_looker.screenshot(path=full_screenshot_looker, full_page=True)
-                send_screenshot_to_telegram(full_screenshot_looker, "*DASHBOARD PROVISIONING TSEL*")
+                send_screenshot_to_telegram(full_screenshot_looker, "*DASHBOARD PROVISIONING TSEL*",GROUP_TARGETS)
 
                 actions_looker = [
                     (page_looker.locator(".lego-component.simple-table > .front > .component").first,
