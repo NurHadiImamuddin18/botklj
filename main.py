@@ -10,7 +10,22 @@ import json
 import subprocess
 
 TELEGRAM_BOT_TOKEN = "8438813402:AAHx98XuJj7zBWO-AP1B_xzp19a8oCpUKs8"
-TELEGRAM_CHAT_IDS = ["-1001714188559"]
+TELEGRAM_CHAT_IDS = ["-1001714188559","-1002755104290","-1002033158680"]
+
+# === Mapping caption -> target chat_id ===
+GROUP_TARGETS = {
+    # WO DAN QC2 KLJ + MAGANG KLJ
+    "*DASHBOARD PROVISIONING TSEL*": ["-1002755104290", "-1001714188559"],
+    "*Produktifitas Teknisi PSB Klojen*": ["-1002755104290", "-1001714188559"],
+
+    # LAPHAR KLOJEN + MAGANG KLJ
+    "*unspec B2C Klojen*": ["-1002033158680", "-1001714188559"],
+    "*KLOJEN - UNSPEC (KLIRING)*": ["-1002033158680", "-1001714188559"],
+
+    # Hanya ke MAGANG KLJ
+    "*Unspec B2B Klojen*": ["-1001714188559"],
+}
+
 API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
 # --- Logging ---
