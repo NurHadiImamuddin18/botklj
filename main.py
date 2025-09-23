@@ -8,6 +8,8 @@ from playwright.sync_api import sync_playwright
 import threading
 import json
 import subprocess
+import requests
+import logging
 
 TELEGRAM_BOT_TOKEN = "8438813402:AAHx98XuJj7zBWO-AP1B_xzp19a8oCpUKs8"
 TELEGRAM_CHAT_IDS = ["-1001714188559","-1002755104290","-1002033158680"]
@@ -25,6 +27,28 @@ GROUP_TARGETS = {
     # Hanya ke MAGANG KLJ
     "*Unspec B2B Klojen*": ["-1001714188559"],
 }
+
+# === Fungsi kirim screenshot ke grup sesuai caption ===
+def send_screenshot_to_telegram(file_path, caption):
+    # Ambil target group sesuai caption
+    target_groups = GROUP_TARGETS.get(caption, [])
+    if not target_groups:
+        logging.warning(f"⚠️ Caption {caption} tidak ada di GROUP_TARGETS, tidak ada grup tujuan.")
+        return
+
+    for chat_id in target_groups:
+        try:
+            with open(file_path, "rb") as f:
+                url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
+                requests.post(
+                    url,
+                    data={"chat_id": chat_id, "caption": caption},
+                    files={"photo": f}
+                )
+                logging.info(f"✅ Screenshot {file_path} terkirim ke {chat_id} ({caption})")
+        except Exception as e:
+            logging.error(f"❌ Gagal kirim {file_path} ke {chat_id}: {e}")
+
 
 API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
