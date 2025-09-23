@@ -535,7 +535,7 @@ def run_full_task(target_chat_ids=None):
                 page_looker.mouse.click(10, 10)
                 time.sleep(2)
                 page_looker.screenshot(path=full_screenshot_looker, full_page=True)
-                send_screenshot_to_telegram(full_screenshot_looker, "*DASHBOARD PROVISIONING TSEL*",GROUP_TARGETS)
+                send_screenshot_to_telegram(full_screenshot_looker, "*DASHBOARD PROVISIONING TSEL*")
 
                 actions_looker = [
                     (page_looker.locator(".lego-component.simple-table > .front > .component").first,
