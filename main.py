@@ -12,7 +12,7 @@ import requests
 import logging
 
 TELEGRAM_BOT_TOKEN = "8438813402:AAHx98XuJj7zBWO-AP1B_xzp19a8oCpUKs8"
-TELEGRAM_CHAT_IDS = ["-1001714188559","-1002755104290","-1002033158680"]
+
 
 # === Mapping caption -> target chat_id ===
 GROUP_TARGETS = {
