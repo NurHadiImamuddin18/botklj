@@ -526,7 +526,7 @@ def run_full_task(target_chat_ids=None):
                 page_looker.mouse.click(10, 10)
                 time.sleep(2)
                 page_looker.screenshot(path=full_screenshot_looker, full_page=True)
-                send_screenshot_to_telegram(full_screenshot_looker, "*DASHBOARD PROVISIONING TSEL*", target_chat_ids)
+                send_screenshot_to_telegram(full_screenshot_looker, "*DASHBOARD PROVISIONING TSEL*")
 
                 actions_looker = [
                     (page_looker.locator(".lego-component.simple-table > .front > .component").first,
@@ -539,7 +539,7 @@ def run_full_task(target_chat_ids=None):
                     try:
                         locator.screenshot(path=filename)
                         locator.click()
-                        send_screenshot_to_telegram(filename, caption, target_chat_ids)
+                        send_screenshot_to_telegram(filename, caption)
                     except Exception as e_inner:
                         logging.error(f"❌ Gagal screenshot elemen Looker {idx}: {e_inner}")
 
@@ -575,7 +575,7 @@ def run_full_task(target_chat_ids=None):
                         element = page_sheet.locator("#scrollable_right_0 > div:nth-child(2) > div").first
                         element.wait_for(state="visible", timeout=15000)
                         element.screenshot(path=filename)
-                        send_screenshot_to_telegram(filename, caption, target_chat_ids)
+                        send_screenshot_to_telegram(filename, caption)
                     except Exception as e_sheet_inner:
                         logging.error(f"❌ Gagal saat memproses Google Sheet range {range_value}: {e_sheet_inner}")
                         if target_chat_ids:
