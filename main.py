@@ -26,6 +26,7 @@ GROUP_TARGETS = {
 
     # Hanya ke MAGANG KLJ
     "Unspec B2B Klojen": ["-1001714188559"],
+    "Detail Order PSB Klojen": ["-1001714188559"],
 }
 
 # === Fungsi kirim screenshot ke grup sesuai caption ===
