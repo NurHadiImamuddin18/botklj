@@ -169,32 +169,45 @@ def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
         logging.error(f"❌ File tidak ditemukan: {image_path}")
         return
 
-    # Tentukan daftar tujuan:
+    # Tentukan daftar tujuan
     if target_chat_ids:
-        # Jika manual trigger /start -> pakai target_chat_ids
         chat_ids = target_chat_ids
     else:
-        # Kalau tidak -> ambil dari GROUP_TARGETS sesuai caption
-        chat_ids = GROUP_TARGETS.get(caption, [])
+        # Ambil dari GROUP_TARGETS (cari key yang mengandung caption)
+        chat_ids = []
+        for key, ids in GROUP_TARGETS.items():
+            if key in caption:
+                chat_ids = ids
+                break
 
     if not chat_ids:
         logging.warning(f"⚠️ Tidak ada grup tujuan untuk caption: {caption}")
         return
 
+    success = False
     for chat_id in chat_ids:
         try:
             with open(image_path, "rb") as photo:
                 resp = requests.post(
                     f"{API_URL}/sendPhoto",
-                    data={"chat_id": chat_id, "caption": caption, "parse_mode": "Markdown"},
+                    data={"chat_id": chat_id, "caption": caption, "parse_mode": "HTML"},
                     files={"photo": photo}
                 )
                 resp.raise_for_status()
             logging.info(f"✅ {image_path} terkirim ke {chat_id} ({caption})")
+            success = True
         except requests.exceptions.RequestException as e:
             logging.error(f"❌ Gagal kirim {image_path} ke {chat_id}: {e}")
         except Exception as e:
             logging.error(f"❌ Error tak terduga saat kirim {image_path} ke {chat_id}: {e}")
+
+    if success:
+        try:
+            os.remove(image_path)
+            logging.info(f"🗑️ File '{image_path}' dihapus setelah pengiriman.")
+        except Exception as e:
+            logging.warning(f"⚠️ Gagal menghapus file {image_path}: {e}")
+
 
     # Hapus file setelah terkirim
     try:
