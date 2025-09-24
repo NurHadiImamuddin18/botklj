@@ -17,11 +17,11 @@ TELEGRAM_CHAT_IDS = ["-1002755104290","-1001714188559","-1002033158680"]
 # === Mapping caption -> target chat_id ===
 GROUP_TARGETS = {
     # WO DAN QC2 KLJ + MAGANG KLJ
-    "DASHBOARD PROVISIONING TSEL": ["-1002755104290", "-1001714188559"],
+    "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong": ["-1002755104290", "-1001714188559"],
     "Produktifitas Teknisi PSB Klojen": ["-1002755104290", "-1001714188559"],
 
     # LAPHAR KLOJEN + MAGANG KLJ
-    "unspec B2C Klojen": ["-1002033158680", "-1001714188559"],
+    "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong": ["-1002033158680", "-1001714188559"],
     "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680", "-1001714188559"],
 
     # Hanya ke MAGANG KLJ
@@ -536,7 +536,7 @@ def run_full_task(target_chat_ids=None):
                 page_looker.mouse.click(10, 10)
                 time.sleep(2)
                 page_looker.screenshot(path=full_screenshot_looker, full_page=True)
-                send_screenshot_to_telegram(full_screenshot_looker, "DASHBOARD PROVISIONING TSEL")
+                send_screenshot_to_telegram(full_screenshot_looker, "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong")
 
                 actions_looker = [
                     (page_looker.locator(".lego-component.simple-table > .front > .component").first,
@@ -570,7 +570,7 @@ def run_full_task(target_chat_ids=None):
                 page_sheet = context_sheet.new_page()
 
                 sheet_steps = [
-                    ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen"),
+                    ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong"),
                     ("D30:I44", "sheet_click_2.png", "KLOJEN - UNSPEC (KLIRING)"),
                     ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
                 ]
