@@ -511,7 +511,7 @@ def run_full_task(target_chat_ids=None):
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
 
-                   # === Screenshot Ticket Closed Malang ===
+          # === Screenshot Ticket Closed Malang ===
             logging.info("➡️ Mengambil screenshot Ticket Closed Malang...")
             context_ticket = browser.new_context(
                 viewport={"width": 525, "height": 635},
@@ -543,13 +543,12 @@ def run_full_task(target_chat_ids=None):
                 page_ticket.mouse.click(10, 10)
                 time.sleep(2)
                 page_ticket.screenshot(path=full_screenshot_ticket, full_page=True)
-                send_screenshot_to_telegram(full_screenshot_ticket, "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong")
+                send_screenshot_to_telegram(full_screenshot_ticket, "TICKET CLOSED MALANG")
 
-                # Screenshot beberapa tombol/elemen
+                # Screenshot beberapa tombol/elemen (sesuai Playwright JS)
                 actions_ticket = [
-                    (page_ticket.locator("button[name='HSA ▼']"), "HSA Filter"),
-                    (page_ticket.locator("button[name='hanya']"), "Filter Hanya"),
-                    (page_ticket.locator("button[name='Membuka menu dengan opsi lain']"), "Menu Lain"),
+                    (page_ticket.locator("button[aria-label='HSA']"), "Filter HSA"),
+                    (page_ticket.locator("text=TICKET CLOSED MALANG"), "Judul Ticket Closed Malang"),
                 ]
 
                 for idx, (locator, caption) in enumerate(actions_ticket, start=1):
@@ -568,6 +567,7 @@ def run_full_task(target_chat_ids=None):
             finally:
                 if context_ticket:
                     context_ticket.close()
+
 
             # === Screenshot Looker Studio ===
             logging.info("➡️ Mengambil screenshot Looker Studio...")
