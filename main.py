@@ -511,7 +511,7 @@ def run_full_task(target_chat_ids=None):
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
 
-             # === Screenshot Ticket Closed Malang ===
+        # === Screenshot Ticket Closed Malang ===
         logging.info("➡️ Mengambil screenshot Ticket Closed Malang...")
         context_ticket = browser.new_context(
             viewport={"width": 525, "height": 635},
