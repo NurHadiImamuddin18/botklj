@@ -514,77 +514,6 @@ def run_full_task(target_chat_ids=None):
        from playwright.sync_api import sync_playwright
 
 
-def run_full_task():
-    logging.info("➡️ Memulai tugas screenshot Ticket Closed Malang...")
-
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context_ticket = browser.new_context(
-                viewport={"width": 525, "height": 635},
-                device_scale_factor=2.6,
-                is_mobile=True,
-                user_agent=(
-                    "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) "
-                    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 "
-                    "Mobile/15A372 Safari/604.1"
-                )
-            )
-            page_ticket = context_ticket.new_page()
-
-            try:
-                page_ticket.goto(
-                    "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
-                    timeout=60000
-                )
-                time.sleep(60)
-
-                # klik tombol presentasi
-                page_ticket.locator("button#more-options-header-menu-button").click()
-                time.sleep(5)
-                page_ticket.locator("button#header-present-button").click()
-                time.sleep(5)
-
-                # Screenshot full page
-                full_screenshot_ticket = "screenshot_full_page_ticket.png"
-                page_ticket.mouse.click(10, 10)
-                time.sleep(2)
-                page_ticket.screenshot(path=full_screenshot_ticket, full_page=True)
-
-                caption_main = "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"
-                chat_ids = get_target_chats(caption_main)
-
-                if chat_ids:
-                    for GROUP_TARGETS in chat_ids:
-                        send_screenshot_to_telegram(full_screenshot_ticket, caption_main, GROUP_TARGETS)
-                else:
-                    logging.warning("⚠️ Tidak ada chat_id tujuan untuk caption: %s", caption_main)
-
-                # Screenshot elemen penting
-                actions_ticket = [
-                    (page_ticket.locator("button[aria-label='HSA']"), "Filter HSA"),
-                    (page_ticket.locator("text=TICKET CLOSED MALANG"), "Ticket Closed Malang"),
-                ]
-
-                for idx, (locator, caption) in enumerate(actions_ticket, start=1):
-                    filename = f"click_ticket_{idx}.png"
-                    try:
-                        locator.screenshot(path=filename)
-                        locator.click()
-                        if chat_ids:
-                            for chat_id in chat_ids:
-                                send_screenshot_to_telegram(filename, caption, chat_id)
-                    except Exception as e_inner:
-                        logging.error(f"❌ Gagal screenshot elemen Ticket Closed Malang {idx}: {e_inner}")
-
-            finally:
-                context_ticket.close()
-                browser.close()
-
-    except Exception as e:
-        logging.error(f"❌ Kesalahan fatal saat menjalankan tugas: {e}")
-
-
             # === Screenshot Looker Studio ===
             logging.info("➡️ Mengambil screenshot Looker Studio...")
             context_looker = browser.new_context(
@@ -613,7 +542,7 @@ def run_full_task():
                 page_looker.mouse.click(10, 10)
                 time.sleep(2)
                 page_looker.screenshot(path=full_screenshot_looker, full_page=True)
-                send_screenshot_to_telegram(full_screenshot_looker, "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong")
+                send_screenshot_to_telegram(full_screenshot_looker, "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut")
 
                 actions_looker = [
                     (page_looker.locator(".lego-component.simple-table > .front > .component").first,
@@ -647,7 +576,7 @@ def run_full_task():
                 page_sheet = context_sheet.new_page()
 
                 sheet_steps = [
-                    ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong"),
+                    ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"),
                     ("D30:I44", "sheet_click_2.png", "KLOJEN - UNSPEC (KLIRING)"),
                     ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
                 ]
