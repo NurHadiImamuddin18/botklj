@@ -9,7 +9,7 @@ import threading
 import json
 import subprocess
 import requests
-import logging
+
 
 TELEGRAM_BOT_TOKEN = "8438813402:AAHx98XuJj7zBWO-AP1B_xzp19a8oCpUKs8"
 TELEGRAM_CHAT_IDS = ["-1002755104290","-1001714188559","-1002033158680"]
@@ -512,8 +512,7 @@ def run_full_task(target_chat_ids=None):
             browser = pw.chromium.launch(headless=True)
 
        from playwright.sync_api import sync_playwright
-import logging
-import time
+
 
 def run_full_task():
     logging.info("➡️ Memulai tugas screenshot Ticket Closed Malang...")
@@ -521,7 +520,6 @@ def run_full_task():
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-
             context_ticket = browser.new_context(
                 viewport={"width": 525, "height": 635},
                 device_scale_factor=2.6,
@@ -541,13 +539,11 @@ def run_full_task():
                 )
                 time.sleep(60)
 
-                print("▶️ Klik tombol menu presentasi Ticket Closed Malang…")
-                page_ticket.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
+                # klik tombol presentasi
                 page_ticket.locator("button#more-options-header-menu-button").click()
-                time.sleep(10)
-                page_ticket.wait_for_selector("button#header-present-button", timeout=10000)
+                time.sleep(5)
                 page_ticket.locator("button#header-present-button").click()
-                time.sleep(10)
+                time.sleep(5)
 
                 # Screenshot full page
                 full_screenshot_ticket = "screenshot_full_page_ticket.png"
@@ -559,8 +555,8 @@ def run_full_task():
                 chat_ids = get_target_chats(caption_main)
 
                 if chat_ids:
-                    for chat_id in chat_ids:
-                        send_screenshot_to_telegram(full_screenshot_ticket, caption_main)
+                    for GROUP_TARGETS in chat_ids:
+                        send_screenshot_to_telegram(full_screenshot_ticket, caption_main, GROUP_TARGETS)
                 else:
                     logging.warning("⚠️ Tidak ada chat_id tujuan untuk caption: %s", caption_main)
 
@@ -577,13 +573,16 @@ def run_full_task():
                         locator.click()
                         if chat_ids:
                             for chat_id in chat_ids:
-                                send_screenshot_to_telegram(filename, caption)
+                                send_screenshot_to_telegram(filename, caption, chat_id)
                     except Exception as e_inner:
                         logging.error(f"❌ Gagal screenshot elemen Ticket Closed Malang {idx}: {e_inner}")
 
             finally:
                 context_ticket.close()
                 browser.close()
+
+    except Exception as e:
+        logging.error(f"❌ Kesalahan fatal saat menjalankan tugas: {e}")
 
 
             # === Screenshot Looker Studio ===
