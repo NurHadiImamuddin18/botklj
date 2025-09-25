@@ -511,75 +511,79 @@ def run_full_task(target_chat_ids=None):
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
 
-        # === Screenshot Ticket Closed Malang ===
-        logging.info("➡️ Mengambil screenshot Ticket Closed Malang...")
-        context_ticket = browser.new_context(
-            viewport={"width": 525, "height": 635},
-            device_scale_factor=2.6,
-            is_mobile=True,
-            user_agent=(
-                "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) "
-                "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 "
-                "Mobile/15A372 Safari/604.1"
+       from playwright.sync_api import sync_playwright
+import logging
+import time
+
+def run_full_task():
+    logging.info("➡️ Memulai tugas screenshot Ticket Closed Malang...")
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+
+            context_ticket = browser.new_context(
+                viewport={"width": 525, "height": 635},
+                device_scale_factor=2.6,
+                is_mobile=True,
+                user_agent=(
+                    "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) "
+                    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 "
+                    "Mobile/15A372 Safari/604.1"
+                )
             )
-        )
-        page_ticket = context_ticket.new_page()
+            page_ticket = context_ticket.new_page()
 
-        try:
-            # Buka link Looker Studio
-            page_ticket.goto(
-                "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
-                timeout=60000
-            )
-            time.sleep(60)
+            try:
+                page_ticket.goto(
+                    "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
+                    timeout=60000
+                )
+                time.sleep(60)
 
-            # Klik tombol presentasi
-            print("▶️ Klik tombol menu presentasi Ticket Closed Malang…")
-            page_ticket.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
-            page_ticket.locator("button#more-options-header-menu-button").click()
-            time.sleep(10)
-            page_ticket.wait_for_selector("button#header-present-button", timeout=10000)
-            page_ticket.locator("button#header-present-button").click()
-            time.sleep(10)
+                print("▶️ Klik tombol menu presentasi Ticket Closed Malang…")
+                page_ticket.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
+                page_ticket.locator("button#more-options-header-menu-button").click()
+                time.sleep(10)
+                page_ticket.wait_for_selector("button#header-present-button", timeout=10000)
+                page_ticket.locator("button#header-present-button").click()
+                time.sleep(10)
 
-            # Screenshot full page
-            full_screenshot_ticket = "screenshot_full_page_ticket.png"
-            page_ticket.mouse.click(10, 10)
-            time.sleep(2)
-            page_ticket.screenshot(path=full_screenshot_ticket, full_page=True)
+                # Screenshot full page
+                full_screenshot_ticket = "screenshot_full_page_ticket.png"
+                page_ticket.mouse.click(10, 10)
+                time.sleep(2)
+                page_ticket.screenshot(path=full_screenshot_ticket, full_page=True)
 
-            caption_main = (
-                "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"
-            )
-            send_screenshot_to_telegram(full_screenshot_ticket, caption_main)
+                caption_main = "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"
+                chat_ids = get_target_chats(caption_main)
 
-            # Screenshot elemen-elemen penting
-            actions_ticket = [
-                (page_ticket.locator("button[aria-label='HSA']"), "Filter HSA"),
-                (page_ticket.locator("text=TICKET CLOSED MALANG"), "Ticket Closed Malang"),
-            ]
+                if chat_ids:
+                    for chat_id in chat_ids:
+                        send_screenshot_to_telegram(full_screenshot_ticket, caption_main)
+                else:
+                    logging.warning("⚠️ Tidak ada chat_id tujuan untuk caption: %s", caption_main)
 
-            for idx, (locator, caption) in enumerate(actions_ticket, start=1):
-                filename = f"click_ticket_{idx}.png"
-                try:
-                    locator.screenshot(path=filename)
-                    locator.click()
-                    send_screenshot_to_telegram(filename, caption)
-                except Exception as e_inner:
-                    logging.error(f"❌ Gagal screenshot elemen Ticket Closed Malang {idx}: {e_inner}")
+                # Screenshot elemen penting
+                actions_ticket = [
+                    (page_ticket.locator("button[aria-label='HSA']"), "Filter HSA"),
+                    (page_ticket.locator("text=TICKET CLOSED MALANG"), "Ticket Closed Malang"),
+                ]
 
-        except Exception as e_ticket:
-            logging.error(f"❌ Gagal saat memproses Ticket Closed Malang: {e_ticket}")
-            # fallback: kirim pesan teks error ke grup sesuai mapping
-            caption_error = "TICKET CLOSED MALANG"
-            chat_ids = get_target_chats(caption_error)
-            for chat_id in chat_ids:
-                send_message(chat_id, f"⚠️ Gagal mengambil screenshot Ticket Closed Malang: {e_ticket}")
+                for idx, (locator, caption) in enumerate(actions_ticket, start=1):
+                    filename = f"click_ticket_{idx}.png"
+                    try:
+                        locator.screenshot(path=filename)
+                        locator.click()
+                        if chat_ids:
+                            for chat_id in chat_ids:
+                                send_screenshot_to_telegram(filename, caption)
+                    except Exception as e_inner:
+                        logging.error(f"❌ Gagal screenshot elemen Ticket Closed Malang {idx}: {e_inner}")
 
-        finally:
-            if context_ticket:
+            finally:
                 context_ticket.close()
-
+                browser.close()
 
 
             # === Screenshot Looker Studio ===
