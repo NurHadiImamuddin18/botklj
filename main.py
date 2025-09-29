@@ -72,6 +72,24 @@ schedules_data = {
 
 user_states = {}
 
+def utc_to_server_local_str(utc_time_str):
+    """
+    Konversi waktu UTC (HH:MM) -> waktu lokal server (HH:MM).
+    """
+    try:
+        # Ambil jam-menit
+        t = datetime.strptime(utc_time_str, "%H:%M").time()
+        # Gabungkan dengan tanggal hari ini
+        today = datetime.now(timezone.utc).date()
+        utc_dt = datetime.combine(today, t).replace(tzinfo=timezone.utc)
+
+        # Konversi ke timezone lokal server
+        local_dt = utc_dt.astimezone()
+        return local_dt.strftime("%H:%M")
+    except Exception as e:
+        logging.warning(f"⚠️ Gagal konversi UTC->local untuk '{utc_time_str}': {e}")
+        return utc_time_str
+
 
 # --- Fungsi helper untuk konversi waktu ---
 def wib_to_utc(wib_time_str):
@@ -512,8 +530,7 @@ def run_full_task(target_chat_ids=None):
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
 
-       from playwright.sync_api import sync_playwright
-
+            from playwright.sync_api import sync_playwright
 
             # === Screenshot Looker Studio ===
             logging.info("➡️ Mengambil screenshot Looker Studio...")
