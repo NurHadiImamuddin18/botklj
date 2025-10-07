@@ -2,7 +2,6 @@ import time
 import requests
 import schedule
 import os
-import re
 import logging
 from datetime import datetime, timezone, timedelta
 from playwright.sync_api import sync_playwright
@@ -33,31 +32,55 @@ GROUP_TARGETS = {
     # Hanya ke LAPHAR KLOJEN
     "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680"],
 }
-GROUP_TARGETS_REGEX = [
-    # kirim ke LAPHAR KLOJEN kalau caption diawali "TICKET CLOSED MALANG" (tanggal/teks lain boleh menyusul)
-    (r"^TICKET CLOSED MALANG\b", ["-1002033158680"]),
-]
 
 # === Fungsi kirim screenshot ke grup sesuai caption ===
-def send_screenshot_to_telegram(file_path, caption):
-    # Ambil target group sesuai caption
-    target_groups = GROUP_TARGETS.get(caption, [])
-    if not target_groups:
-        logging.warning(f"⚠️ Caption {caption} tidak ada di GROUP_TARGETS, tidak ada grup tujuan.")
+def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
+    """
+    Mengirim screenshot ke Telegram.
+
+    - Jika target_chat_ids diberikan, akan dikirim ke chat tersebut.
+    - Jika tidak, akan mencari caption di GROUP_TARGETS (exact match).
+    - File akan dihapus hanya sekali setelah semua pengiriman selesai.
+    """
+
+    if not os.path.exists(image_path):
+        logging.error(f"❌ File tidak ditemukan: {image_path}")
         return
 
-    for chat_id in target_groups:
+    # Tentukan daftar tujuan
+    if target_chat_ids:
+        chat_ids = target_chat_ids
+    else:
+        chat_ids = GROUP_TARGETS.get(caption, [])
+
+    if not chat_ids:
+        logging.warning(f"⚠️ Tidak ada grup tujuan untuk caption: {caption}")
+        return
+
+    success = False
+    for chat_id in chat_ids:
         try:
-            with open(file_path, "rb") as f:
-                url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
-                requests.post(
-                    url,
-                    data={"chat_id": chat_id, "caption": caption},
-                    files={"photo": f}
+            with open(image_path, "rb") as photo:
+                resp = requests.post(
+                    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto",
+                    data={"chat_id": chat_id, "caption": caption, "parse_mode": "HTML"},
+                    files={"photo": photo}
                 )
-                logging.info(f"✅ Screenshot {file_path} terkirim ke {chat_id} ({caption})")
+                resp.raise_for_status()
+            logging.info(f"✅ {image_path} terkirim ke {chat_id} ({caption})")
+            success = True
+        except requests.exceptions.RequestException as e:
+            logging.error(f"❌ Gagal kirim {image_path} ke {chat_id}: {e}")
         except Exception as e:
-            logging.error(f"❌ Gagal kirim {file_path} ke {chat_id}: {e}")
+            logging.error(f"❌ Error tak terduga saat kirim {image_path} ke {chat_id}: {e}")
+
+    # Hapus file sekali setelah semua chat selesai
+    if success:
+        try:
+            os.remove(image_path)
+            logging.info(f"🗑️ File '{image_path}' dihapus setelah pengiriman.")
+        except Exception as e:
+            logging.warning(f"⚠️ Gagal menghapus file {image_path}: {e}")
 
 
 API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
@@ -171,108 +194,6 @@ def format_datetime_with_wib(dt):
         logging.warning(f"⚠️ format_datetime_with_wib gagal untuk {dt}: {e}")
         return str(dt)
 
-
-# --- Kirim foto + caption sesuai GROUP_TARGETS ---
-def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
-    """
-    Mengirim screenshot ke Telegram.
-
-    - Jika target_chat_ids diberikan, akan dikirim ke chat tersebut.
-    - Jika tidak, akan mencari caption di GROUP_TARGETS (exact match).
-    - File akan dihapus hanya sekali setelah semua pengiriman selesai.
-    """
-
-    if not os.path.exists(image_path):
-        logging.error(f"❌ File tidak ditemukan: {image_path}")
-        return
-
-    # Tentukan daftar tujuan
-    if target_chat_ids:
-        chat_ids = target_chat_ids
-    else:
-        chat_ids = GROUP_TARGETS.get(caption, [])
-
-    if not chat_ids:
-        logging.warning(f"⚠️ Tidak ada grup tujuan untuk caption: {caption}")
-        return
-
-    success = False
-    for chat_id in chat_ids:
-        try:
-            with open(image_path, "rb") as photo:
-                resp = requests.post(
-                    f"{API_URL}/sendPhoto",
-                    data={"chat_id": chat_id, "caption": caption, "parse_mode": "HTML"},
-                    files={"photo": photo}
-                )
-                resp.raise_for_status()
-            logging.info(f"✅ {image_path} terkirim ke {chat_id} ({caption})")
-            success = True
-        except requests.exceptions.RequestException as e:
-            logging.error(f"❌ Gagal kirim {image_path} ke {chat_id}: {e}")
-        except Exception as e:
-            logging.error(f"❌ Error tak terduga saat kirim {image_path} ke {chat_id}: {e}")
-
-    # Hapus file sekali setelah semua chat selesai
-    if success:
-        try:
-            os.remove(image_path)
-            logging.info(f"🗑️ File '{image_path}' dihapus setelah pengiriman.")
-        except Exception as e:
-            logging.warning(f"⚠️ Gagal menghapus file {image_path}: {e}")
-
-
-def send_screenshot_flex(image_path, caption, explicit_chat_ids=None):
-    """
-    Versi fleksibel:
-    1) Jika explicit_chat_ids ada -> kirim ke situ
-    2) Jika tidak, coba exact match GROUP_TARGETS
-    3) Jika gagal, cocokkan pola di GROUP_TARGETS_REGEX (regex)
-    """
-    if not os.path.exists(image_path):
-        logging.error(f"❌ File tidak ditemukan: {image_path}")
-        return
-
-    chat_ids = []
-    if explicit_chat_ids:
-        chat_ids = list(dict.fromkeys(explicit_chat_ids))  # unique
-    else:
-        # exact match dulu
-        chat_ids = GROUP_TARGETS.get(caption, [])
-        # kalau gagal, coba regex
-        if not chat_ids:
-            for pattern, ids in GROUP_TARGETS_REGEX:
-                if re.search(pattern, caption, flags=re.IGNORECASE):
-                    chat_ids = ids
-                    break
-
-    if not chat_ids:
-        logging.warning(f"⚠️ Tidak ada grup tujuan untuk caption: {caption}")
-        return
-
-    success = False
-    for chat_id in chat_ids:
-        try:
-            with open(image_path, "rb") as photo:
-                resp = requests.post(
-                    f"{API_URL}/sendPhoto",
-                    data={"chat_id": chat_id, "caption": caption, "parse_mode": "HTML"},
-                    files={"photo": photo}
-                )
-                resp.raise_for_status()
-            logging.info(f"✅ {image_path} terkirim ke {chat_id} ({caption})")
-            success = True
-        except requests.exceptions.RequestException as e:
-            logging.error(f"❌ Gagal kirim {image_path} ke {chat_id}: {e}")
-        except Exception as e:
-            logging.error(f"❌ Error tak terduga saat kirim {image_path} ke {chat_id}: {e}")
-
-    if success:
-        try:
-            os.remove(image_path)
-            logging.info(f"🗑️ File '{image_path}' dihapus setelah pengiriman.")
-        except Exception as e:
-            logging.warning(f"⚠️ Gagal menghapus file {image_path}: {e}")
 
 # --- Kirim pesan teks ---
 def send_message(chat_id, text, reply_markup=None):
@@ -541,6 +462,54 @@ def handle_time_input(chat_id, time_input):
     user_states.pop(chat_id, None)
 
 
+# === CAPTURE BARU: sesuai snippet Playwright JS kamu ===
+def capture_ticket_closed_via_roles(browser, target_chat_ids=None):
+    """
+    Menjalankan langkah-langkah:
+      1) buka halaman report
+      2) klik 'HSA ▼' -> 'hanya'
+      3) buka menu 'Membuka menu dengan opsi lain' -> 'Presentasikan'
+      4) klik teks berisi 'TICKET CLOSED MALANG ...'
+      5) screenshot dan kirim ke grup 'TICKET CLOSED MALANG ...'
+    """
+    logging.info("➡️ (BARU) Menjalankan capture via get_by_role/get_by_text untuk 'TICKET CLOSED MALANG'...")
+    context = browser.new_context(
+        viewport={"width": 1366, "height": 900},
+        device_scale_factor=1.25
+    )
+    page = context.new_page()
+    try:
+        page.goto("https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE", timeout=60000)
+        page.wait_for_load_state("domcontentloaded")
+        time.sleep(5)
+
+        # Sesuai snippet JS
+        page.get_by_role("button", name="HSA ▼").click(timeout=15000)
+        page.get_by_role("button", name="hanya").click(timeout=15000)
+        page.get_by_role("button", name="Membuka menu dengan opsi lain").click(timeout=15000)
+        page.get_by_role("menuitem", name="Presentasikan").click(timeout=15000)
+
+        # Teks yang statis kita pakai substring agar tidak rapuh pada tanggal
+        # (tetap kompatibel dengan snippet: jika mau strict, tinggal ganti ke string lengkap)
+        page.get_by_text("TICKET CLOSED MALANG", exact=False).first.click(timeout=15000)
+
+        time.sleep(3)
+        filename = "ticket_closed_via_roles.png"
+        page.screenshot(path=filename, full_page=True)
+
+        # Caption harus persis seperti di GROUP_TARGETS agar routing grup benar
+        caption = "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"
+        send_screenshot_to_telegram(filename, caption, target_chat_ids)
+
+        logging.info("✅ (BARU) Capture via roles selesai.")
+    except Exception as e:
+        logging.error(f"❌ (BARU) Gagal capture via roles: {e}")
+        if target_chat_ids:
+            send_message(target_chat_ids[0], f"⚠️ Gagal capture baru (via roles): {e}")
+    finally:
+        context.close()
+
+
 # --- Fungsi utama pengambilan screenshot ---
 def run_full_task(target_chat_ids=None):
     global is_running
@@ -567,7 +536,18 @@ def run_full_task(target_chat_ids=None):
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
+<<<<<<< HEAD
             
+=======
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+            # === Screenshot Ticket Closed Malang (HSA Klojen) ===
+            logging.info("➡️ Mengambil screenshot Ticket Closed Malang (HSA Klojen)...")
+
+            context_ticket = browser.new_context(
+=======
+>>>>>>> fb7ebf1 (bismillah)
         # === Screenshot Ticket Tutup Malang (LAPHAR KLOJEN) ===
         logging.info("➡️ Mengambil screenshot Ticket Tutup Malang (LAPHAR KLOJEN)...")
 
@@ -644,177 +624,104 @@ def run_full_task(target_chat_ids=None):
             # === Screenshot Looker Studio ===
             logging.info("➡️ Mengambil screenshot Looker Studio...")
             context_looker = browser.new_context(
+<<<<<<< HEAD
 
+=======
+>>>>>>> e1a4f3a (jkt)
+=======
+            # === (BARU) Jalankan capture sesuai snippet Playwright JS kamu ===
+            capture_ticket_closed_via_roles(browser, target_chat_ids)
+
+            # === Screenshot Looker Studio ===
+            logging.info("➡️ Mengambil screenshot Looker Studio...")
+            context_looker = browser.new_context(
+>>>>>>> c8843c3 (bismillah)
+>>>>>>> fb7ebf1 (bismillah)
                 viewport={"width": 525, "height": 635},
                 device_scale_factor=2.6,
                 is_mobile=True,
-                user_agent=(
-                    "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) "
-                    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 "
-                    "Mobile/15A372 Safari/604.1"
-                )
+                user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15A372 Safari/604.1"
             )
-
-            page_ticket = context_ticket.new_page()
-            MENTION_LIST = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong"
+            page_looker = context_looker.new_page()
 
             try:
-                # === Buka halaman Looker Studio ===
-                page_ticket.goto(
-                    "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
-                    timeout=60000
-                )
+                page_looker.goto(
+                    "https://lookerstudio.google.com/reporting/ef7aa823-d379-4eca-8c7c-f0ff47a9924b/page/p_rgveqlnbkd",
+                    timeout=60000)
                 time.sleep(60)
 
-                # === Masuk ke mode presentasi ===
-                print("▶️ Klik tombol menu presentasi Ticket Closed Malang…")
-                page_ticket.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
-                page_ticket.locator("button#more-options-header-menu-button").click()
+                print("▶️ Klik tombol menu presentasi…")
+                page_looker.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
+                page_looker.locator("button#more-options-header-menu-button").click()
+                time.sleep(10)
+                page_looker.wait_for_selector("button#header-present-button", timeout=10000)
+                page_looker.locator("button#header-present-button").click()
                 time.sleep(10)
 
-                page_ticket.wait_for_selector("button#header-present-button", timeout=10000)
-                page_ticket.locator("button#header-present-button").click()
-                time.sleep(10)
-
-                # === Klik filter HSA → pilih Klojen ===
-                print("▶️ Klik filter HSA…")
-                page_ticket.wait_for_selector("button[aria-label='HSA']", timeout=15000)
-                page_ticket.locator("button[aria-label='HSA']").click()
-                time.sleep(5)
-
-                print("▶️ Pilih opsi Klojen…")
-                page_ticket.wait_for_selector("text=Klojen", timeout=15000)
-                page_ticket.locator("text=Klojen").click()
-                time.sleep(5)
-
-                # === Ambil screenshot setelah filter Klojen ===
-                full_screenshot_ticket = "screenshot_hsa_klojen.png"
-                page_ticket.mouse.click(10, 10)
+                full_screenshot_looker = "screenshot_full_page_looker.png"
+                page_looker.mouse.click(10, 10)
                 time.sleep(2)
-                page_ticket.screenshot(path=full_screenshot_ticket, full_page=True)
+                page_looker.screenshot(path=full_screenshot_looker, full_page=True)
+                send_screenshot_to_telegram(full_screenshot_looker, "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut")
 
-                send_screenshot_to_telegram(
-                    full_screenshot_ticket,
-                    f"TICKET CLOSED MALANG (HSA Klojen) {MENTION_LIST}",
-                    target_chat_ids
-                )
+                actions_looker = [
+                    (page_looker.locator(".lego-component.simple-table > .front > .component").first,
+                     "Produktifitas Teknisi PSB Klojen"),
+                    (page_looker.locator(".lego-component.simple-table.cd-mq84137tsd > .front > .component"),
+                     "Detail Order PSB Klojen"),
+                ]
+                for idx, (locator, caption) in enumerate(actions_looker, start=1):
+                    filename = f"click_looker_{idx}.png"
+                    try:
+                        locator.screenshot(path=filename)
+                        locator.click()
+                        send_screenshot_to_telegram(filename, caption)
+                    except Exception as e_inner:
+                        logging.error(f"❌ Gagal screenshot elemen Looker {idx}: {e_inner}")
 
-            except Exception as e_ticket:
-                logging.error(f"❌ Gagal saat memproses Ticket Closed Malang (HSA Klojen): {e_ticket}")
+            except Exception as e_looker:
+                logging.error(f"❌ Gagal saat memproses Looker Studio: {e_looker}")
                 if target_chat_ids:
-                    send_message(
-                        target_chat_ids[0],
-                        f"⚠️ Gagal mengambil screenshot Ticket Closed Malang (HSA Klojen): {e_ticket}"
-                    )
-
+                    send_message(target_chat_ids[0], f"⚠️ Gagal mengambil screenshot Looker Studio: {e_looker}")
             finally:
-                if context_ticket:
-                    context_ticket.close()
+                if context_looker:
+                    context_looker.close()
 
-                # === Screenshot Looker Studio ===
-                logging.info("➡️ Mengambil screenshot Looker Studio...")
-                context_looker = browser.new_context(
-                    viewport={"width": 525, "height": 635},
-                    device_scale_factor=2.6,
-                    is_mobile=True,
-                    user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15A372 Safari/604.1"
-                )
-                page_looker = context_looker.new_page()
+            # === Screenshot Google Sheets ===
+            logging.info("➡️ Mengambil screenshot Google Sheets...")
+            context_sheet = None
+            page_sheet = None
+            try:
+                context_sheet = browser.new_context()
+                page_sheet = context_sheet.new_page()
 
-                try:
-                    page_looker.goto(
-                        "https://lookerstudio.google.com/reporting/ef7aa823-d379-4eca-8c7c-f0ff47a9924b/page/p_rgveqlnbkd",
-                        timeout=60000)
-                    time.sleep(60)
+                sheet_steps = [
+                    ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"),
+                    ("D30:I44", "sheet_click_2.png", "KLOJEN - UNSPEC (KLIRING)"),
+                    ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
+                ]
+                for range_value, filename, caption in sheet_steps:
+                    try:
+                        page_sheet.goto(
+                            f"https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=1872895195&range={range_value}",
+                            timeout=75000,
+                            wait_until="domcontentloaded"
+                        )
+                        time.sleep(15)
+                        element = page_sheet.locator("#scrollable_right_0 > div:nth-child(2) > div").first
+                        element.wait_for(state="visible", timeout=15000)
+                        element.screenshot(path=filename)
+                        send_screenshot_to_telegram(filename, caption)
+                    except Exception as e_sheet_inner:
+                        logging.error(f"❌ Gagal saat memproses Google Sheet range {range_value}: {e_sheet_inner}")
+                        if target_chat_ids:
+                            send_message(target_chat_ids[0],
+                                         f"⚠️ Gagal mengambil screenshot Google Sheet (Range {range_value}): {e_sheet_inner}")
+            finally:
+                if context_sheet:
+                    context_sheet.close()
 
-                    print("▶️ Klik tombol menu presentasi…")
-                    page_looker.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
-                    page_looker.locator("button#more-options-header-menu-button").click()
-                    time.sleep(10)
-                    page_looker.wait_for_selector("button#header-present-button", timeout=10000)
-                    page_looker.locator("button#header-present-button").click()
-                    time.sleep(10)
-
-                    full_screenshot_looker = "screenshot_full_page_looker.png"
-                    page_looker.mouse.click(10, 10)
-                    time.sleep(2)
-                    page_looker.screenshot(path=full_screenshot_looker, full_page=True)
-                    send_screenshot_to_telegram(full_screenshot_looker, "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut")
-
-                    actions_looker = [
-                        (page_looker.locator(".lego-component.simple-table > .front > .component").first,
-                         "Produktifitas Teknisi PSB Klojen"),
-                        (page_looker.locator(".lego-component.simple-table.cd-mq84137tsd > .front > .component"),
-                         "Detail Order PSB Klojen"),
-                    ]
-                    for idx, (locator, caption) in enumerate(actions_looker, start=1):
-                        filename = f"click_looker_{idx}.png"
-                        try:
-                            locator.screenshot(path=filename)
-                            locator.click()
-                            send_screenshot_to_telegram(filename, caption)
-                        except Exception as e_inner:
-                            logging.error(f"❌ Gagal screenshot elemen Looker {idx}: {e_inner}")
-
-                except Exception as e_looker:
-                    logging.error(f"❌ Gagal saat memproses Looker Studio: {e_looker}")
-                    if target_chat_ids:
-                        send_message(target_chat_ids[0], f"⚠️ Gagal mengambil screenshot Looker Studio: {e_looker}")
-                finally:
-                    if context_looker:
-                        context_looker.close()
-                        try:
-                            logging.info("➡️ Mengambil screenshot 'TICKET CLOSED MALANG' (Looker baru)...")
-                            capture_looker_ticket_closed(browser)
-                        except Exception as e_new:
-                            logging.error(f"❌ Gagal Looker 'TICKET CLOSED MALANG': {e_new}")
-                            if target_chat_ids:
-                                send_message(target_chat_ids[0], f"⚠️ Gagal ambil 'TICKET CLOSED MALANG': {e_new}")
-
-                    # === Screenshot Google Sheets ===
-                logging.info("➡️ Mengambil screenshot Google Sheets...")
-                context_sheet = None
-                page_sheet = None
-                try:
-                    context_sheet = browser.new_context()
-                    page_sheet = context_sheet.new_page()
-
-                    sheet_steps = [
-                        ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"),
-                        ("D30:I44", "sheet_click_2.png", "KLOJEN - UNSPEC (KLIRING)"),
-                        ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
-                    ]
-                    for range_value, filename, caption in enumerate(sheet_steps, start=1):
-                        pass  # placeholder to keep structure
-
-                    # gunakan versi aslinya, tidak diubah:
-                    sheet_steps = [
-                        ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"),
-                        ("D30:I44", "sheet_click_2.png", "KLOJEN - UNSPEC (KLIRING)"),
-                        ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
-                    ]
-                    for range_value, filename, caption in sheet_steps:
-                        try:
-                            page_sheet.goto(
-                                f"https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=1872895195&range={range_value}",
-                                timeout=75000,
-                                wait_until="domcontentloaded"
-                            )
-                            time.sleep(15)
-                            element = page_sheet.locator("#scrollable_right_0 > div:nth-child(2) > div").first
-                            element.wait_for(state="visible", timeout=15000)
-                            element.screenshot(path=filename)
-                            send_screenshot_to_telegram(filename, caption)
-                        except Exception as e_sheet_inner:
-                            logging.error(f"❌ Gagal saat memproses Google Sheet range {range_value}: {e_sheet_inner}")
-                            if target_chat_ids:
-                                send_message(target_chat_ids[0],
-                                             f"⚠️ Gagal mengambil screenshot Google Sheet (Range {range_value}): {e_sheet_inner}")
-                finally:
-                    if context_sheet:
-                        context_sheet.close()
-
-                browser.close()
+            browser.close()
 
             if is_manual_trigger:
                 send_message(target_chat_ids[0], "✅ Pengambilan screenshot selesai dan telah dikirim.")
@@ -828,60 +735,6 @@ def run_full_task(target_chat_ids=None):
         logging.info(f"--- Task screenshot selesai ---")
         show_next_schedule()
 
-def capture_looker_ticket_closed(browser):
-    """
-    Membuka report Looker Studio 'TICKET CLOSED MALANG', set filter,
-    presentasi, lalu screenshot (tile/halaman) dan kirim ke grup.
-    """
-    context = browser.new_context(
-        viewport={"width": 1200, "height": 800},
-        device_scale_factor=1.5
-    )
-    page = context.new_page()
-    try:
-        # URL dari skrip Playwright test kamu
-        page.goto(
-            "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
-            timeout=60000,
-            wait_until="domcontentloaded"
-        )
-
-        # Adaptasi dari JS kamu:
-        try:
-            page.get_by_role("button", name="HSA ▼").click(timeout=15000)
-            # Jika opsi "hanya" muncul di menu:
-            page.get_by_role("button", name=re.compile(r"hanya", re.I)).click(timeout=15000)
-        except Exception:
-            logging.warning("⚠️ Tombol filter 'HSA ▼' atau 'hanya' tidak ditemukan / dilewati.")
-
-        try:
-            page.get_by_role("button", name=re.compile(r"Membuka menu dengan opsi lain", re.I)).click(timeout=15000)
-            page.get_by_role("menuitem", name=re.compile(r"Presentasikan", re.I)).click(timeout=15000)
-        except Exception:
-            logging.warning("⚠️ Tombol presentasi tidak ditemukan / dilewati.")
-
-        # Beri jeda agar tampilan stabil
-        page.wait_for_timeout(5000)
-
-        # Coba screenshot elemen yang memuat teks "TICKET CLOSED MALANG"
-        filename = "ticket_closed_malang.png"
-        try:
-            tile = page.get_by_text(re.compile(r"TICKET CLOSED MALANG", re.I)).first
-            tile.scroll_into_view_if_needed()
-            tile.screenshot(path=filename)
-        except Exception:
-            logging.warning("⚠️ Elemen 'TICKET CLOSED MALANG' spesifik tidak ketemu, ambil full page.")
-            page.screenshot(path=filename, full_page=True)
-
-        # Caption dinamis (biar regex routing menangkapnya)
-        today_wib = datetime.now(timezone(timedelta(hours=7))).strftime("%-d %b %Y")
-        caption = f"TICKET CLOSED MALANG • {today_wib}"
-
-        # Pakai pengirim fleksibel (regex), TIDAK mengganggu pengirim lama
-        send_screenshot_flex(filename, caption)
-
-    finally:
-        context.close()
 
 # --- Command help ---
 def handle_help(chat_id):
@@ -905,7 +758,6 @@ Contoh: `08:30`, `14:45`, `23:00`
 Input waktu dalam **WIB (Waktu Indonesia Barat)**
 Bot otomatis mengkonversi dan menyimpan dalam UTC
 Jadwal akan berjalan sesuai waktu WIB yang Anda masukkan"""
-
     send_message(chat_id, help_text)
 
 
@@ -934,7 +786,7 @@ def listen_for_commands():
                     chat_info = message.get("chat", {})
                     chat_id = chat_info.get("id", "")
                     chat_type = chat_info.get("type", "unknown")
-                    chat_title = message.get("chat", {}).get("title", "")
+                    chat_title = chat_info.get("title", "")
                     from_user = message.get("from", {}).get("username", "unknown_user")
 
                     logging.info(
