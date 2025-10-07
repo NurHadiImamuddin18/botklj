@@ -72,25 +72,6 @@ schedules_data = {
 
 user_states = {}
 
-def utc_to_server_local_str(utc_time_str):
-    """
-    Konversi waktu UTC (HH:MM) -> waktu lokal server (HH:MM).
-    """
-    try:
-        # Ambil jam-menit
-        t = datetime.strptime(utc_time_str, "%H:%M").time()
-        # Gabungkan dengan tanggal hari ini
-        today = datetime.now(timezone.utc).date()
-        utc_dt = datetime.combine(today, t).replace(tzinfo=timezone.utc)
-
-        # Konversi ke timezone lokal server
-        local_dt = utc_dt.astimezone()
-        return local_dt.strftime("%H:%M")
-    except Exception as e:
-        logging.warning(f"⚠️ Gagal konversi UTC->local untuk '{utc_time_str}': {e}")
-        return utc_time_str
-
-
 # --- Fungsi helper untuk konversi waktu ---
 def wib_to_utc(wib_time_str):
     """
@@ -530,7 +511,77 @@ def run_full_task(target_chat_ids=None):
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
 
+            from playwright.sync_api import sync_playwright
 
+                    # === Screenshot Ticket Closed Malang (HSA Klojen) ===
+        logging.info("➡️ Mengambil screenshot Ticket Closed Malang (HSA Klojen)...")
+
+        context_ticket = browser.new_context(
+            viewport={"width": 525, "height": 635},
+            device_scale_factor=2.6,
+            is_mobile=True,
+            user_agent=(
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) "
+                "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 "
+                "Mobile/15A372 Safari/604.1"
+            )
+        )
+
+        page_ticket = context_ticket.new_page()
+        MENTION_LIST = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"
+
+        try:
+            # === Buka halaman Looker Studio ===
+            page_ticket.goto(
+                "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
+                timeout=60000
+            )
+            time.sleep(60)
+
+            # === Masuk ke mode presentasi ===
+            print("▶️ Klik tombol menu presentasi Ticket Closed Malang…")
+            page_ticket.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
+            page_ticket.locator("button#more-options-header-menu-button").click()
+            time.sleep(10)
+
+            page_ticket.wait_for_selector("button#header-present-button", timeout=10000)
+            page_ticket.locator("button#header-present-button").click()
+            time.sleep(10)
+
+            # === Klik filter HSA → pilih Klojen ===
+            print("▶️ Klik filter HSA…")
+            page_ticket.wait_for_selector("button[aria-label='HSA']", timeout=15000)
+            page_ticket.locator("button[aria-label='HSA']").click()
+            time.sleep(5)
+
+            print("▶️ Pilih opsi Klojen…")
+            page_ticket.wait_for_selector("text=Klojen", timeout=15000)
+            page_ticket.locator("text=Klojen").click()
+            time.sleep(5)
+
+            # === Ambil screenshot setelah filter Klojen ===
+            full_screenshot_ticket = "screenshot_hsa_klojen.png"
+            page_ticket.mouse.click(10, 10)
+            time.sleep(2)
+            page_ticket.screenshot(path=full_screenshot_ticket, full_page=True)
+
+            send_screenshot_to_telegram(
+                full_screenshot_ticket,
+                f"TICKET CLOSED MALANG (HSA Klojen) {MENTION_LIST}",
+                target_chat_ids
+            )
+
+        except Exception as e_ticket:
+            logging.error(f"❌ Gagal saat memproses Ticket Closed Malang (HSA Klojen): {e_ticket}")
+            if target_chat_ids:
+                send_message(
+                    target_chat_ids[0],
+                    f"⚠️ Gagal mengambil screenshot Ticket Closed Malang (HSA Klojen): {e_ticket}"
+                )
+
+        finally:
+            if context_ticket:
+                context_ticket.close()
 
             # === Screenshot Looker Studio ===
             logging.info("➡️ Mengambil screenshot Looker Studio...")
