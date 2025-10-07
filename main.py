@@ -513,7 +513,7 @@ def run_full_task(target_chat_ids=None):
 
             from playwright.sync_api import sync_playwright
 
-                    # === Screenshot Ticket Closed Malang (HSA Klojen) ===
+        # === Screenshot Ticket Closed Malang (HSA Klojen) ===
         logging.info("➡️ Mengambil screenshot Ticket Closed Malang (HSA Klojen)...")
 
         context_ticket = browser.new_context(
