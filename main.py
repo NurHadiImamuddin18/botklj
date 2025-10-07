@@ -567,13 +567,7 @@ def run_full_task(target_chat_ids=None):
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
-
-<<<<<<< HEAD
-            # === Screenshot Ticket Closed Malang (HSA Klojen) ===
-            logging.info("➡️ Mengambil screenshot Ticket Closed Malang (HSA Klojen)...")
-
-            context_ticket = browser.new_context(
-=======
+            
         # === Screenshot Ticket Tutup Malang (LAPHAR KLOJEN) ===
         logging.info("➡️ Mengambil screenshot Ticket Tutup Malang (LAPHAR KLOJEN)...")
 
@@ -650,7 +644,7 @@ def run_full_task(target_chat_ids=None):
             # === Screenshot Looker Studio ===
             logging.info("➡️ Mengambil screenshot Looker Studio...")
             context_looker = browser.new_context(
->>>>>>> e1a4f3a (jkt)
+
                 viewport={"width": 525, "height": 635},
                 device_scale_factor=2.6,
                 is_mobile=True,
