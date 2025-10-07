@@ -34,7 +34,25 @@ GROUP_TARGETS = {
 }
 
 # === Fungsi kirim screenshot ke grup sesuai caption ===
+def send_screenshot_to_telegram(file_path, caption):
+    # Ambil target group sesuai caption
+    target_groups = GROUP_TARGETS.get(caption, [])
+    if not target_groups:
+        logging.warning(f"⚠️ Caption {caption} tidak ada di GROUP_TARGETS, tidak ada grup tujuan.")
+        return
 
+    for chat_id in target_groups:
+        try:
+            with open(file_path, "rb") as f:
+                url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
+                requests.post(
+                    url,
+                    data={"chat_id": chat_id, "caption": caption},
+                    files={"photo": f}
+                )
+                logging.info(f"✅ Screenshot {file_path} terkirim ke {chat_id} ({caption})")
+        except Exception as e:
+            logging.error(f"❌ Gagal kirim {file_path} ke {chat_id}: {e}")
 
 
 API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
