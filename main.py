@@ -568,10 +568,89 @@ def run_full_task(target_chat_ids=None):
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
 
+<<<<<<< HEAD
             # === Screenshot Ticket Closed Malang (HSA Klojen) ===
             logging.info("➡️ Mengambil screenshot Ticket Closed Malang (HSA Klojen)...")
 
             context_ticket = browser.new_context(
+=======
+        # === Screenshot Ticket Tutup Malang (LAPHAR KLOJEN) ===
+        logging.info("➡️ Mengambil screenshot Ticket Tutup Malang (LAPHAR KLOJEN)...")
+
+        context_laphar = browser.new_context(
+            viewport={"width": 525, "height": 635},
+            device_scale_factor=2.6,
+            is_mobile=True,
+            user_agent=(
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) "
+                "AppleWebKit/605.1.15 (KHTML, seperti Gecko) Version/14.0 "
+                "Mobile/15A372 Safari/604.1"
+            )
+        )
+
+        page_laphar = context_laphar.new_page()
+        MENTION_LIST = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"
+
+        try:
+            # === Buka halaman Looker Studio ===
+            page_laphar.goto(
+                "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
+                timeout=60000
+            )
+            time.sleep(60)
+
+            # === Klik filter HSA ▼ ===
+            print("▶️ Klik tombol HSA ▼ ...")
+            page_laphar.get_by_role("button", name="HSA ▼").click()
+            time.sleep(5)
+
+            # === Pilih opsi Klojen ===
+            print("▶️ Pilih opsi Klojen ...")
+            page_laphar.get_by_role("button", name="Klojen").click()
+            time.sleep(5)
+
+            # === Klik menu dengan opsi lain ===
+            print("▶️ Klik menu dengan opsi lain ...")
+            page_laphar.get_by_role("button", name="Membuka menu dengan opsi lain").click()
+            time.sleep(5)
+
+            # === Klik menu Presentasikan ===
+            print("▶️ Klik menu Presentasikan ...")
+            page_laphar.get_by_role("menuitem", name="Presentasikan").click()
+            time.sleep(10)
+
+            # === Klik area teks utama dashboard ===
+            print("▶️ Klik area teks utama dashboard ...")
+            page_laphar.get_by_text("TICKET CLOSED MALANG").click()
+            time.sleep(2)
+
+            # === Ambil screenshot penuh ===
+            full_screenshot_laphar = "screenshot_ticket_tutup_laphar_klojen.png"
+            page_laphar.mouse.click(10, 10)
+            time.sleep(2)
+            page_laphar.screenshot(path=full_screenshot_laphar, full_page=True)
+
+            send_screenshot_to_telegram(
+                full_screenshot_laphar,
+                f"TICKET TUTUP MALANG (LAPHAR KLOJEN) {MENTION_LIST}",
+                ["-1002033158680"]
+            )
+
+        except Exception as e_laphar:
+            logging.error(f"❌ Gagal saat memproses Ticket Tutup Malang (LAPHAR KLOJEN): {e_laphar}")
+            send_message(
+                "-1002033158680",
+                f"⚠️ Gagal mengambil screenshot Ticket Tutup Malang (LAPHAR KLOJEN): {e_laphar}"
+            )
+
+        finally:
+            if context_laphar:
+                context_laphar.close()
+
+            # === Screenshot Looker Studio ===
+            logging.info("➡️ Mengambil screenshot Looker Studio...")
+            context_looker = browser.new_context(
+>>>>>>> e1a4f3a (jkt)
                 viewport={"width": 525, "height": 635},
                 device_scale_factor=2.6,
                 is_mobile=True,
