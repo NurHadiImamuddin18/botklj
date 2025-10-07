@@ -568,172 +568,180 @@ def run_full_task(target_chat_ids=None):
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
 
+            # === Screenshot Ticket Closed Malang (HSA Klojen) ===
+            logging.info("➡️ Mengambil screenshot Ticket Closed Malang (HSA Klojen)...")
 
-        # === Screenshot Ticket Closed Malang (HSA Klojen) ===
-        logging.info("➡️ Mengambil screenshot Ticket Closed Malang (HSA Klojen)...")
-
-        context_ticket = browser.new_context(
-            viewport={"width": 525, "height": 635},
-            device_scale_factor=2.6,
-            is_mobile=True,
-            user_agent=(
-                "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) "
-                "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 "
-                "Mobile/15A372 Safari/604.1"
-            )
-        )
-
-        page_ticket = context_ticket.new_page()
-        MENTION_LIST = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong"
-
-        try:
-            # === Buka halaman Looker Studio ===
-            page_ticket.goto(
-                "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
-                timeout=60000
-            )
-            time.sleep(60)
-
-            # === Masuk ke mode presentasi ===
-            print("▶️ Klik tombol menu presentasi Ticket Closed Malang…")
-            page_ticket.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
-            page_ticket.locator("button#more-options-header-menu-button").click()
-            time.sleep(10)
-
-            page_ticket.wait_for_selector("button#header-present-button", timeout=10000)
-            page_ticket.locator("button#header-present-button").click()
-            time.sleep(10)
-
-            # === Klik filter HSA → pilih Klojen ===
-            print("▶️ Klik filter HSA…")
-            page_ticket.wait_for_selector("button[aria-label='HSA']", timeout=15000)
-            page_ticket.locator("button[aria-label='HSA']").click()
-            time.sleep(5)
-
-            print("▶️ Pilih opsi Klojen…")
-            page_ticket.wait_for_selector("text=Klojen", timeout=15000)
-            page_ticket.locator("text=Klojen").click()
-            time.sleep(5)
-
-            # === Ambil screenshot setelah filter Klojen ===
-            full_screenshot_ticket = "screenshot_hsa_klojen.png"
-            page_ticket.mouse.click(10, 10)
-            time.sleep(2)
-            page_ticket.screenshot(path=full_screenshot_ticket, full_page=True)
-
-            send_screenshot_to_telegram(
-                full_screenshot_ticket,
-                f"TICKET CLOSED MALANG (HSA Klojen) {MENTION_LIST}",
-                target_chat_ids
-            )
-
-        except Exception as e_ticket:
-            logging.error(f"❌ Gagal saat memproses Ticket Closed Malang (HSA Klojen): {e_ticket}")
-            if target_chat_ids:
-                send_message(
-                    target_chat_ids[0],
-                    f"⚠️ Gagal mengambil screenshot Ticket Closed Malang (HSA Klojen): {e_ticket}"
-                )
-
-        finally:
-            if context_ticket:
-                context_ticket.close()
-
-            # === Screenshot Looker Studio ===
-            logging.info("➡️ Mengambil screenshot Looker Studio...")
-            context_looker = browser.new_context(
+            context_ticket = browser.new_context(
                 viewport={"width": 525, "height": 635},
                 device_scale_factor=2.6,
                 is_mobile=True,
-                user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15A372 Safari/604.1"
+                user_agent=(
+                    "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) "
+                    "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 "
+                    "Mobile/15A372 Safari/604.1"
+                )
             )
-            page_looker = context_looker.new_page()
+
+            page_ticket = context_ticket.new_page()
+            MENTION_LIST = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong"
 
             try:
-                page_looker.goto(
-                    "https://lookerstudio.google.com/reporting/ef7aa823-d379-4eca-8c7c-f0ff47a9924b/page/p_rgveqlnbkd",
-                    timeout=60000)
+                # === Buka halaman Looker Studio ===
+                page_ticket.goto(
+                    "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
+                    timeout=60000
+                )
                 time.sleep(60)
 
-                print("▶️ Klik tombol menu presentasi…")
-                page_looker.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
-                page_looker.locator("button#more-options-header-menu-button").click()
-                time.sleep(10)
-                page_looker.wait_for_selector("button#header-present-button", timeout=10000)
-                page_looker.locator("button#header-present-button").click()
+                # === Masuk ke mode presentasi ===
+                print("▶️ Klik tombol menu presentasi Ticket Closed Malang…")
+                page_ticket.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
+                page_ticket.locator("button#more-options-header-menu-button").click()
                 time.sleep(10)
 
-                full_screenshot_looker = "screenshot_full_page_looker.png"
-                page_looker.mouse.click(10, 10)
+                page_ticket.wait_for_selector("button#header-present-button", timeout=10000)
+                page_ticket.locator("button#header-present-button").click()
+                time.sleep(10)
+
+                # === Klik filter HSA → pilih Klojen ===
+                print("▶️ Klik filter HSA…")
+                page_ticket.wait_for_selector("button[aria-label='HSA']", timeout=15000)
+                page_ticket.locator("button[aria-label='HSA']").click()
+                time.sleep(5)
+
+                print("▶️ Pilih opsi Klojen…")
+                page_ticket.wait_for_selector("text=Klojen", timeout=15000)
+                page_ticket.locator("text=Klojen").click()
+                time.sleep(5)
+
+                # === Ambil screenshot setelah filter Klojen ===
+                full_screenshot_ticket = "screenshot_hsa_klojen.png"
+                page_ticket.mouse.click(10, 10)
                 time.sleep(2)
-                page_looker.screenshot(path=full_screenshot_looker, full_page=True)
-                send_screenshot_to_telegram(full_screenshot_looker, "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut")
+                page_ticket.screenshot(path=full_screenshot_ticket, full_page=True)
 
-                actions_looker = [
-                    (page_looker.locator(".lego-component.simple-table > .front > .component").first,
-                     "Produktifitas Teknisi PSB Klojen"),
-                    (page_looker.locator(".lego-component.simple-table.cd-mq84137tsd > .front > .component"),
-                     "Detail Order PSB Klojen"),
-                ]
-                for idx, (locator, caption) in enumerate(actions_looker, start=1):
-                    filename = f"click_looker_{idx}.png"
-                    try:
-                        locator.screenshot(path=filename)
-                        locator.click()
-                        send_screenshot_to_telegram(filename, caption)
-                    except Exception as e_inner:
-                        logging.error(f"❌ Gagal screenshot elemen Looker {idx}: {e_inner}")
+                send_screenshot_to_telegram(
+                    full_screenshot_ticket,
+                    f"TICKET CLOSED MALANG (HSA Klojen) {MENTION_LIST}",
+                    target_chat_ids
+                )
 
-            except Exception as e_looker:
-                logging.error(f"❌ Gagal saat memproses Looker Studio: {e_looker}")
+            except Exception as e_ticket:
+                logging.error(f"❌ Gagal saat memproses Ticket Closed Malang (HSA Klojen): {e_ticket}")
                 if target_chat_ids:
-                    send_message(target_chat_ids[0], f"⚠️ Gagal mengambil screenshot Looker Studio: {e_looker}")
+                    send_message(
+                        target_chat_ids[0],
+                        f"⚠️ Gagal mengambil screenshot Ticket Closed Malang (HSA Klojen): {e_ticket}"
+                    )
+
             finally:
-                if context_looker:
-                    context_looker.close()
-                    try:
-                        logging.info("➡️ Mengambil screenshot 'TICKET CLOSED MALANG' (Looker baru)...")
-                        capture_looker_ticket_closed(browser)
-                    except Exception as e_new:
-                        logging.error(f"❌ Gagal Looker 'TICKET CLOSED MALANG': {e_new}")
-                        if target_chat_ids:
-                            send_message(target_chat_ids[0], f"⚠️ Gagal ambil 'TICKET CLOSED MALANG': {e_new}")
+                if context_ticket:
+                    context_ticket.close()
+
+                # === Screenshot Looker Studio ===
+                logging.info("➡️ Mengambil screenshot Looker Studio...")
+                context_looker = browser.new_context(
+                    viewport={"width": 525, "height": 635},
+                    device_scale_factor=2.6,
+                    is_mobile=True,
+                    user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15A372 Safari/604.1"
+                )
+                page_looker = context_looker.new_page()
+
+                try:
+                    page_looker.goto(
+                        "https://lookerstudio.google.com/reporting/ef7aa823-d379-4eca-8c7c-f0ff47a9924b/page/p_rgveqlnbkd",
+                        timeout=60000)
+                    time.sleep(60)
+
+                    print("▶️ Klik tombol menu presentasi…")
+                    page_looker.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
+                    page_looker.locator("button#more-options-header-menu-button").click()
+                    time.sleep(10)
+                    page_looker.wait_for_selector("button#header-present-button", timeout=10000)
+                    page_looker.locator("button#header-present-button").click()
+                    time.sleep(10)
+
+                    full_screenshot_looker = "screenshot_full_page_looker.png"
+                    page_looker.mouse.click(10, 10)
+                    time.sleep(2)
+                    page_looker.screenshot(path=full_screenshot_looker, full_page=True)
+                    send_screenshot_to_telegram(full_screenshot_looker, "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut")
+
+                    actions_looker = [
+                        (page_looker.locator(".lego-component.simple-table > .front > .component").first,
+                         "Produktifitas Teknisi PSB Klojen"),
+                        (page_looker.locator(".lego-component.simple-table.cd-mq84137tsd > .front > .component"),
+                         "Detail Order PSB Klojen"),
+                    ]
+                    for idx, (locator, caption) in enumerate(actions_looker, start=1):
+                        filename = f"click_looker_{idx}.png"
+                        try:
+                            locator.screenshot(path=filename)
+                            locator.click()
+                            send_screenshot_to_telegram(filename, caption)
+                        except Exception as e_inner:
+                            logging.error(f"❌ Gagal screenshot elemen Looker {idx}: {e_inner}")
+
+                except Exception as e_looker:
+                    logging.error(f"❌ Gagal saat memproses Looker Studio: {e_looker}")
+                    if target_chat_ids:
+                        send_message(target_chat_ids[0], f"⚠️ Gagal mengambil screenshot Looker Studio: {e_looker}")
+                finally:
+                    if context_looker:
+                        context_looker.close()
+                        try:
+                            logging.info("➡️ Mengambil screenshot 'TICKET CLOSED MALANG' (Looker baru)...")
+                            capture_looker_ticket_closed(browser)
+                        except Exception as e_new:
+                            logging.error(f"❌ Gagal Looker 'TICKET CLOSED MALANG': {e_new}")
+                            if target_chat_ids:
+                                send_message(target_chat_ids[0], f"⚠️ Gagal ambil 'TICKET CLOSED MALANG': {e_new}")
 
                     # === Screenshot Google Sheets ===
-            logging.info("➡️ Mengambil screenshot Google Sheets...")
-            context_sheet = None
-            page_sheet = None
-            try:
-                context_sheet = browser.new_context()
-                page_sheet = context_sheet.new_page()
+                logging.info("➡️ Mengambil screenshot Google Sheets...")
+                context_sheet = None
+                page_sheet = None
+                try:
+                    context_sheet = browser.new_context()
+                    page_sheet = context_sheet.new_page()
 
-                sheet_steps = [
-                    ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"),
-                    ("D30:I44", "sheet_click_2.png", "KLOJEN - UNSPEC (KLIRING)"),
-                    ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
-                ]
-                for range_value, filename, caption in sheet_steps:
-                    try:
-                        page_sheet.goto(
-                            f"https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=1872895195&range={range_value}",
-                            timeout=75000,
-                            wait_until="domcontentloaded"
-                        )
-                        time.sleep(15)
-                        element = page_sheet.locator("#scrollable_right_0 > div:nth-child(2) > div").first
-                        element.wait_for(state="visible", timeout=15000)
-                        element.screenshot(path=filename)
-                        send_screenshot_to_telegram(filename, caption)
-                    except Exception as e_sheet_inner:
-                        logging.error(f"❌ Gagal saat memproses Google Sheet range {range_value}: {e_sheet_inner}")
-                        if target_chat_ids:
-                            send_message(target_chat_ids[0],
-                                         f"⚠️ Gagal mengambil screenshot Google Sheet (Range {range_value}): {e_sheet_inner}")
-            finally:
-                if context_sheet:
-                    context_sheet.close()
+                    sheet_steps = [
+                        ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"),
+                        ("D30:I44", "sheet_click_2.png", "KLOJEN - UNSPEC (KLIRING)"),
+                        ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
+                    ]
+                    for range_value, filename, caption in enumerate(sheet_steps, start=1):
+                        pass  # placeholder to keep structure
 
-            browser.close()
+                    # gunakan versi aslinya, tidak diubah:
+                    sheet_steps = [
+                        ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"),
+                        ("D30:I44", "sheet_click_2.png", "KLOJEN - UNSPEC (KLIRING)"),
+                        ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
+                    ]
+                    for range_value, filename, caption in sheet_steps:
+                        try:
+                            page_sheet.goto(
+                                f"https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=1872895195&range={range_value}",
+                                timeout=75000,
+                                wait_until="domcontentloaded"
+                            )
+                            time.sleep(15)
+                            element = page_sheet.locator("#scrollable_right_0 > div:nth-child(2) > div").first
+                            element.wait_for(state="visible", timeout=15000)
+                            element.screenshot(path=filename)
+                            send_screenshot_to_telegram(filename, caption)
+                        except Exception as e_sheet_inner:
+                            logging.error(f"❌ Gagal saat memproses Google Sheet range {range_value}: {e_sheet_inner}")
+                            if target_chat_ids:
+                                send_message(target_chat_ids[0],
+                                             f"⚠️ Gagal mengambil screenshot Google Sheet (Range {range_value}): {e_sheet_inner}")
+                finally:
+                    if context_sheet:
+                        context_sheet.close()
+
+                browser.close()
 
             if is_manual_trigger:
                 send_message(target_chat_ids[0], "✅ Pengambilan screenshot selesai dan telah dikirim.")
@@ -853,7 +861,7 @@ def listen_for_commands():
                     chat_info = message.get("chat", {})
                     chat_id = chat_info.get("id", "")
                     chat_type = chat_info.get("type", "unknown")
-                    chat_title = chat_info.get("title", "")
+                    chat_title = message.get("chat", {}).get("title", "")
                     from_user = message.get("from", {}).get("username", "unknown_user")
 
                     logging.info(
