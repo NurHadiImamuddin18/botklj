@@ -34,53 +34,25 @@ GROUP_TARGETS = {
 }
 
 # === Fungsi kirim screenshot ke grup sesuai caption ===
-def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
-    """
-    Mengirim screenshot ke Telegram.
-
-    - Jika target_chat_ids diberikan, akan dikirim ke chat tersebut.
-    - Jika tidak, akan mencari caption di GROUP_TARGETS (exact match).
-    - File akan dihapus hanya sekali setelah semua pengiriman selesai.
-    """
-
-    if not os.path.exists(image_path):
-        logging.error(f"❌ File tidak ditemukan: {image_path}")
+def send_screenshot_to_telegram(file_path, caption):
+    # Ambil target group sesuai caption
+    target_groups = GROUP_TARGETS.get(caption, [])
+    if not target_groups:
+        logging.warning(f"⚠️ Caption {caption} tidak ada di GROUP_TARGETS, tidak ada grup tujuan.")
         return
 
-    # Tentukan daftar tujuan
-    if target_chat_ids:
-        chat_ids = target_chat_ids
-    else:
-        chat_ids = GROUP_TARGETS.get(caption, [])
-
-    if not chat_ids:
-        logging.warning(f"⚠️ Tidak ada grup tujuan untuk caption: {caption}")
-        return
-
-    success = False
-    for chat_id in chat_ids:
+    for chat_id in target_groups:
         try:
-            with open(image_path, "rb") as photo:
-                resp = requests.post(
-                    f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto",
-                    data={"chat_id": chat_id, "caption": caption, "parse_mode": "HTML"},
-                    files={"photo": photo}
+            with open(file_path, "rb") as f:
+                url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
+                requests.post(
+                    url,
+                    data={"chat_id": chat_id, "caption": caption},
+                    files={"photo": f}
                 )
-                resp.raise_for_status()
-            logging.info(f"✅ {image_path} terkirim ke {chat_id} ({caption})")
-            success = True
-        except requests.exceptions.RequestException as e:
-            logging.error(f"❌ Gagal kirim {image_path} ke {chat_id}: {e}")
+                logging.info(f"✅ Screenshot {file_path} terkirim ke {chat_id} ({caption})")
         except Exception as e:
-            logging.error(f"❌ Error tak terduga saat kirim {image_path} ke {chat_id}: {e}")
-
-    # Hapus file sekali setelah semua chat selesai
-    if success:
-        try:
-            os.remove(image_path)
-            logging.info(f"🗑️ File '{image_path}' dihapus setelah pengiriman.")
-        except Exception as e:
-            logging.warning(f"⚠️ Gagal menghapus file {image_path}: {e}")
+            logging.error(f"❌ Gagal kirim {file_path} ke {chat_id}: {e}")
 
 
 API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
@@ -193,6 +165,56 @@ def format_datetime_with_wib(dt):
     except Exception as e:
         logging.warning(f"⚠️ format_datetime_with_wib gagal untuk {dt}: {e}")
         return str(dt)
+
+
+# --- Kirim foto + caption sesuai GROUP_TARGETS ---
+def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
+    """
+    Mengirim screenshot ke Telegram.
+
+    - Jika target_chat_ids diberikan, akan dikirim ke chat tersebut.
+    - Jika tidak, akan mencari caption di GROUP_TARGETS (exact match).
+    - File akan dihapus hanya sekali setelah semua pengiriman selesai.
+    """
+
+    if not os.path.exists(image_path):
+        logging.error(f"❌ File tidak ditemukan: {image_path}")
+        return
+
+    # Tentukan daftar tujuan
+    if target_chat_ids:
+        chat_ids = target_chat_ids
+    else:
+        chat_ids = GROUP_TARGETS.get(caption, [])
+
+    if not chat_ids:
+        logging.warning(f"⚠️ Tidak ada grup tujuan untuk caption: {caption}")
+        return
+
+    success = False
+    for chat_id in chat_ids:
+        try:
+            with open(image_path, "rb") as photo:
+                resp = requests.post(
+                    f"{API_URL}/sendPhoto",
+                    data={"chat_id": chat_id, "caption": caption, "parse_mode": "HTML"},
+                    files={"photo": photo}
+                )
+                resp.raise_for_status()
+            logging.info(f"✅ {image_path} terkirim ke {chat_id} ({caption})")
+            success = True
+        except requests.exceptions.RequestException as e:
+            logging.error(f"❌ Gagal kirim {image_path} ke {chat_id}: {e}")
+        except Exception as e:
+            logging.error(f"❌ Error tak terduga saat kirim {image_path} ke {chat_id}: {e}")
+
+    # Hapus file sekali setelah semua chat selesai
+    if success:
+        try:
+            os.remove(image_path)
+            logging.info(f"🗑️ File '{image_path}' dihapus setelah pengiriman.")
+        except Exception as e:
+            logging.warning(f"⚠️ Gagal menghapus file {image_path}: {e}")
 
 
 # --- Kirim pesan teks ---
@@ -462,54 +484,6 @@ def handle_time_input(chat_id, time_input):
     user_states.pop(chat_id, None)
 
 
-# === CAPTURE BARU: sesuai snippet Playwright JS kamu ===
-def capture_ticket_closed_via_roles(browser, target_chat_ids=None):
-    """
-    Menjalankan langkah-langkah:
-      1) buka halaman report
-      2) klik 'HSA ▼' -> 'hanya'
-      3) buka menu 'Membuka menu dengan opsi lain' -> 'Presentasikan'
-      4) klik teks berisi 'TICKET CLOSED MALANG ...'
-      5) screenshot dan kirim ke grup 'TICKET CLOSED MALANG ...'
-    """
-    logging.info("➡️ (BARU) Menjalankan capture via get_by_role/get_by_text untuk 'TICKET CLOSED MALANG'...")
-    context = browser.new_context(
-        viewport={"width": 1366, "height": 900},
-        device_scale_factor=1.25
-    )
-    page = context.new_page()
-    try:
-        page.goto("https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE", timeout=60000)
-        page.wait_for_load_state("domcontentloaded")
-        time.sleep(5)
-
-        # Sesuai snippet JS
-        page.get_by_role("button", name="HSA ▼").click(timeout=15000)
-        page.get_by_role("button", name="hanya").click(timeout=15000)
-        page.get_by_role("button", name="Membuka menu dengan opsi lain").click(timeout=15000)
-        page.get_by_role("menuitem", name="Presentasikan").click(timeout=15000)
-
-        # Teks yang statis kita pakai substring agar tidak rapuh pada tanggal
-        # (tetap kompatibel dengan snippet: jika mau strict, tinggal ganti ke string lengkap)
-        page.get_by_text("TICKET CLOSED MALANG", exact=False).first.click(timeout=15000)
-
-        time.sleep(3)
-        filename = "ticket_closed_via_roles.png"
-        page.screenshot(path=filename, full_page=True)
-
-        # Caption harus persis seperti di GROUP_TARGETS agar routing grup benar
-        caption = "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"
-        send_screenshot_to_telegram(filename, caption, target_chat_ids)
-
-        logging.info("✅ (BARU) Capture via roles selesai.")
-    except Exception as e:
-        logging.error(f"❌ (BARU) Gagal capture via roles: {e}")
-        if target_chat_ids:
-            send_message(target_chat_ids[0], f"⚠️ Gagal capture baru (via roles): {e}")
-    finally:
-        context.close()
-
-
 # --- Fungsi utama pengambilan screenshot ---
 def run_full_task(target_chat_ids=None):
     global is_running
@@ -537,8 +511,6 @@ def run_full_task(target_chat_ids=None):
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
 
-            # === (BARU) Jalankan capture sesuai snippet Playwright JS kamu ===
-            capture_ticket_closed_via_roles(browser, target_chat_ids)
 
             # === Screenshot Looker Studio ===
             logging.info("➡️ Mengambil screenshot Looker Studio...")
@@ -593,7 +565,7 @@ def run_full_task(target_chat_ids=None):
                 if context_looker:
                     context_looker.close()
 
-            # === Screenshot Google Sheets ===
+                    # === Screenshot Google Sheets ===
             logging.info("➡️ Mengambil screenshot Google Sheets...")
             context_sheet = None
             page_sheet = None
@@ -664,6 +636,7 @@ Contoh: `08:30`, `14:45`, `23:00`
 Input waktu dalam **WIB (Waktu Indonesia Barat)**
 Bot otomatis mengkonversi dan menyimpan dalam UTC
 Jadwal akan berjalan sesuai waktu WIB yang Anda masukkan"""
+
     send_message(chat_id, help_text)
 
 
