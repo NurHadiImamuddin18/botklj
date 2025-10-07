@@ -511,7 +511,6 @@ def run_full_task(target_chat_ids=None):
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
 
-            from playwright.sync_api import sync_playwright
 
             # === Screenshot Looker Studio ===
             logging.info("➡️ Mengambil screenshot Looker Studio...")
