@@ -2,6 +2,7 @@ import time
 import requests
 import schedule
 import os
+import re
 import logging
 from datetime import datetime, timezone, timedelta
 from playwright.sync_api import sync_playwright
@@ -32,6 +33,10 @@ GROUP_TARGETS = {
     # Hanya ke LAPHAR KLOJEN
     "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680"],
 }
+GROUP_TARGETS_REGEX = [
+    # kirim ke LAPHAR KLOJEN kalau caption diawali "TICKET CLOSED MALANG" (tanggal/teks lain boleh menyusul)
+    (r"^TICKET CLOSED MALANG\b", ["-1002033158680"]),
+]
 
 # === Fungsi kirim screenshot ke grup sesuai caption ===
 def send_screenshot_to_telegram(file_path, caption):
@@ -216,6 +221,58 @@ def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
         except Exception as e:
             logging.warning(f"⚠️ Gagal menghapus file {image_path}: {e}")
 
+
+def send_screenshot_flex(image_path, caption, explicit_chat_ids=None):
+    """
+    Versi fleksibel:
+    1) Jika explicit_chat_ids ada -> kirim ke situ
+    2) Jika tidak, coba exact match GROUP_TARGETS
+    3) Jika gagal, cocokkan pola di GROUP_TARGETS_REGEX (regex)
+    """
+    if not os.path.exists(image_path):
+        logging.error(f"❌ File tidak ditemukan: {image_path}")
+        return
+
+    chat_ids = []
+    if explicit_chat_ids:
+        chat_ids = list(dict.fromkeys(explicit_chat_ids))  # unique
+    else:
+        # exact match dulu
+        chat_ids = GROUP_TARGETS.get(caption, [])
+        # kalau gagal, coba regex
+        if not chat_ids:
+            for pattern, ids in GROUP_TARGETS_REGEX:
+                if re.search(pattern, caption, flags=re.IGNORECASE):
+                    chat_ids = ids
+                    break
+
+    if not chat_ids:
+        logging.warning(f"⚠️ Tidak ada grup tujuan untuk caption: {caption}")
+        return
+
+    success = False
+    for chat_id in chat_ids:
+        try:
+            with open(image_path, "rb") as photo:
+                resp = requests.post(
+                    f"{API_URL}/sendPhoto",
+                    data={"chat_id": chat_id, "caption": caption, "parse_mode": "HTML"},
+                    files={"photo": photo}
+                )
+                resp.raise_for_status()
+            logging.info(f"✅ {image_path} terkirim ke {chat_id} ({caption})")
+            success = True
+        except requests.exceptions.RequestException as e:
+            logging.error(f"❌ Gagal kirim {image_path} ke {chat_id}: {e}")
+        except Exception as e:
+            logging.error(f"❌ Error tak terduga saat kirim {image_path} ke {chat_id}: {e}")
+
+    if success:
+        try:
+            os.remove(image_path)
+            logging.info(f"🗑️ File '{image_path}' dihapus setelah pengiriman.")
+        except Exception as e:
+            logging.warning(f"⚠️ Gagal menghapus file {image_path}: {e}")
 
 # --- Kirim pesan teks ---
 def send_message(chat_id, text, reply_markup=None):
@@ -634,6 +691,13 @@ def run_full_task(target_chat_ids=None):
             finally:
                 if context_looker:
                     context_looker.close()
+                    try:
+                        logging.info("➡️ Mengambil screenshot 'TICKET CLOSED MALANG' (Looker baru)...")
+                        capture_looker_ticket_closed(browser)
+                    except Exception as e_new:
+                        logging.error(f"❌ Gagal Looker 'TICKET CLOSED MALANG': {e_new}")
+                        if target_chat_ids:
+                            send_message(target_chat_ids[0], f"⚠️ Gagal ambil 'TICKET CLOSED MALANG': {e_new}")
 
                     # === Screenshot Google Sheets ===
             logging.info("➡️ Mengambil screenshot Google Sheets...")
@@ -683,6 +747,60 @@ def run_full_task(target_chat_ids=None):
         logging.info(f"--- Task screenshot selesai ---")
         show_next_schedule()
 
+def capture_looker_ticket_closed(browser):
+    """
+    Membuka report Looker Studio 'TICKET CLOSED MALANG', set filter,
+    presentasi, lalu screenshot (tile/halaman) dan kirim ke grup.
+    """
+    context = browser.new_context(
+        viewport={"width": 1200, "height": 800},
+        device_scale_factor=1.5
+    )
+    page = context.new_page()
+    try:
+        # URL dari skrip Playwright test kamu
+        page.goto(
+            "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
+            timeout=60000,
+            wait_until="domcontentloaded"
+        )
+
+        # Adaptasi dari JS kamu:
+        try:
+            page.get_by_role("button", name="HSA ▼").click(timeout=15000)
+            # Jika opsi "hanya" muncul di menu:
+            page.get_by_role("button", name=re.compile(r"hanya", re.I)).click(timeout=15000)
+        except Exception:
+            logging.warning("⚠️ Tombol filter 'HSA ▼' atau 'hanya' tidak ditemukan / dilewati.")
+
+        try:
+            page.get_by_role("button", name=re.compile(r"Membuka menu dengan opsi lain", re.I)).click(timeout=15000)
+            page.get_by_role("menuitem", name=re.compile(r"Presentasikan", re.I)).click(timeout=15000)
+        except Exception:
+            logging.warning("⚠️ Tombol presentasi tidak ditemukan / dilewati.")
+
+        # Beri jeda agar tampilan stabil
+        page.wait_for_timeout(5000)
+
+        # Coba screenshot elemen yang memuat teks "TICKET CLOSED MALANG"
+        filename = "ticket_closed_malang.png"
+        try:
+            tile = page.get_by_text(re.compile(r"TICKET CLOSED MALANG", re.I)).first
+            tile.scroll_into_view_if_needed()
+            tile.screenshot(path=filename)
+        except Exception:
+            logging.warning("⚠️ Elemen 'TICKET CLOSED MALANG' spesifik tidak ketemu, ambil full page.")
+            page.screenshot(path=filename, full_page=True)
+
+        # Caption dinamis (biar regex routing menangkapnya)
+        today_wib = datetime.now(timezone(timedelta(hours=7))).strftime("%-d %b %Y")
+        caption = f"TICKET CLOSED MALANG • {today_wib}"
+
+        # Pakai pengirim fleksibel (regex), TIDAK mengganggu pengirim lama
+        send_screenshot_flex(filename, caption)
+
+    finally:
+        context.close()
 
 # --- Command help ---
 def handle_help(chat_id):
