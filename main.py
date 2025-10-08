@@ -515,7 +515,15 @@ def run_full_task(target_chat_ids=None):
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
 
+<<<<<<< HEAD
             # === Screenshot Ticket Closed Malang ===
+=======
+<<<<<<< HEAD
+# === Screenshot Ticket Closed Malang ===
+=======
+            # === Screenshot Ticket Closed Malang ===
+>>>>>>> d3a3488 (bismillah)
+>>>>>>> b1d241d (bismillah)
             logging.info("➡️ Mengambil screenshot Ticket Closed Malang...")
             context_ticket = None
             page_ticket = None
@@ -529,6 +537,71 @@ def run_full_task(target_chat_ids=None):
                                "Mobile/15A372 Safari/604.1"
                 )
                 page_ticket = context_ticket.new_page()
+<<<<<<< HEAD
+=======
+
+                page_ticket.goto(
+                    "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
+                    timeout=120000
+                )
+                time.sleep(60)
+
+                print("▶️ Klik tombol menu HSA ▼ …")
+                page_ticket.wait_for_selector("text=HSA ▼", timeout=30000)
+                page_ticket.locator("text=HSA ▼").click()
+                time.sleep(5)
+
+                print("▶️ Klik tombol hanya …")
+                page_ticket.wait_for_selector("button:has-text('hanya'), text=Hanya", timeout=45000)
+                page_ticket.locator("button:has-text('hanya'), text=Hanya").click()
+                time.sleep(5)
+
+                print("▶️ Klik tombol menu opsi lain …")
+                page_ticket.wait_for_selector("[aria-label*='opsi']", timeout=30000)
+                page_ticket.locator("[aria-label*='opsi']").click()
+                time.sleep(10)
+
+                print("▶️ Klik tombol presentasikan …")
+                page_ticket.wait_for_selector("text=Presentasikan", timeout=30000)
+                page_ticket.locator("text=Presentasikan").click()
+                time.sleep(10)
+
+                full_screenshot_ticket = "ticket_closed_malang.png"
+                page_ticket.mouse.click(10, 10)
+                time.sleep(2)
+                page_ticket.screenshot(path=full_screenshot_ticket, full_page=True)
+                send_screenshot_to_telegram(
+                    full_screenshot_ticket,
+                    "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia "
+                    "@YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"
+                )
+
+                actions_ticket = [
+                    (page_ticket.locator("text=TICKET CLOSED MALANG").first,
+                     "Rekapitulasi Ticket Closed Malang"),
+                ]
+                for idx, (locator, caption) in enumerate(actions_ticket, start=1):
+                    filename = f"click_ticket_{idx}.png"
+                    try:
+                        locator.screenshot(path=filename)
+                        locator.click()
+                        send_screenshot_to_telegram(filename, caption)
+                    except Exception as e_inner:
+                        logging.error(f"❌ Gagal screenshot elemen Ticket Closed {idx}: {e_inner}")
+
+                    except Exception as e_ticket:
+                        logging.error(f"❌ Gagal saat memproses Ticket Closed Malang: {e_ticket}")
+                        target_chat_ids = find_target_chat_ids("TICKET CLOSED MALANG", target_groups)
+                        if target_chat_ids:
+                            send_message(target_chat_ids[0],
+                                         f"⚠️ Gagal mengambil screenshot Ticket Closed Malang: {e_ticket}")
+                    else:
+                        logging.warning(f"⚠️ Tidak ada target_chat_ids untuk Ticket Closed Malang. Error: {e_ticket}")
+
+            finally:
+                if context_ticket:
+                    context_ticket.close()
+>>>>>>> d3a3488 (bismillah)
 
                 page_ticket.goto(
                     "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
