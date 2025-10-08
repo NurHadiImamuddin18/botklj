@@ -13,24 +13,41 @@ import logging
 
 
 TELEGRAM_BOT_TOKEN = "7965696771:AAEG8DLoUOcdIVdqG4IIyAxL5j2Aa6k_v4w"
+<<<<<<< HEAD
 TELEGRAM_CHAT_IDS = ["-1002755104290","-1001714188559","-1002033158680"]
+=======
+TELEGRAM_CHAT_IDS = ["-1002755104290","-1001714188559","-1002033158680","-4801312301"] 
+>>>>>>> 473e5e3 (bismillah)
 
 # === Mapping caption -> target chat_id ===
 GROUP_TARGETS = {
     # WO DAN QC2 KLJ + MAGANG KLJ
+<<<<<<< HEAD
     "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002755104290", "-1001714188559"],
     "Produktifitas Teknisi PSB Klojen": ["-1002755104290", "-1001714188559"],
 
     # LAPHAR KLOJEN + MAGANG KLJ
     "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680", "-1001714188559"],
     "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680", "-1001714188559"],
+=======
+    "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002755104290", "-1001714188559","-4801312301"],
+    "Produktifitas Teknisi PSB Klojen": ["-1002755104290", "-1001714188559","-4801312301"],
+
+    # LAPHAR KLOJEN + MAGANG KLJ
+    "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680", "-1001714188559","-4801312301"],
+    "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680", "-1001714188559","-4801312301"],
+>>>>>>> 473e5e3 (bismillah)
 
     # Hanya ke MAGANG KLJ
-    "Unspec B2B Klojen": ["-1001714188559"],
-    "Detail Order PSB Klojen": ["-1001714188559"],
+    "Unspec B2B Klojen": ["-1001714188559","-4801312301"],
+    "Detail Order PSB Klojen": ["-1001714188559","-4801312301"],
 
     # Hanya ke LAPHAR KLOJEN
+<<<<<<< HEAD
     "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680"],
+=======
+    "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680","-4801312301"],
+>>>>>>> 473e5e3 (bismillah)
 }
 
 # === Fungsi kirim screenshot ke grup sesuai caption ===
@@ -510,7 +527,133 @@ def run_full_task(target_chat_ids=None):
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
+<<<<<<< HEAD
 
+=======
+            
+                        # === Screenshot Ticket Closed Malang (langsung HSA KLJ) ===
+            logging.info("➡️ Mengambil screenshot Ticket Closed Malang...")
+            context_ticket = browser.new_context(
+                viewport={"width": 525, "height": 635},
+                device_scale_factor=2.6,
+                is_mobile=True,
+                user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) "
+                           "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 "
+                           "Mobile/15A372 Safari/604.1"
+            )
+            page_ticket = context_ticket.new_page()
+
+            MENTION_LIST = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong"
+            TICKET_CHAT_IDS = ["-1002033158680", "-4801312301"]  # kirim hanya ke dua chat ini
+
+            # helper kecil: klik by role/text di page & semua iframe
+            def _click_any(page, names, roles=("button",), timeout_ms=10000):
+                import time, re
+                if isinstance(names, str):
+                    names = [names]
+                deadline = time.time() + (timeout_ms / 1000.0)
+                last_err = None
+                while time.time() < deadline:
+                    for target in [page, *page.frames]:
+                        for role in roles:
+                            for nm in names:
+                                try:
+                                    if role == "text":
+                                        target.get_by_text(re.compile(nm, re.I)).first.click(timeout=1200)
+                                    else:
+                                        target.get_by_role(role, name=re.compile(nm, re.I)).first.click(timeout=1200)
+                                    return True
+                                except Exception as e:
+                                    last_err = e
+                    time.sleep(0.25)
+                raise last_err or TimeoutError(f"Gagal klik: {names} (roles={roles})")
+
+            try:
+                page_ticket.goto(
+                    "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
+                    timeout=60000
+                )
+                time.sleep(60)
+
+                # === PILIH HSA KLJ -> HANYA ===
+                print("▶️ Buka filter HSA ▼ …")
+                try:
+                    _click_any(page_ticket, [r"HSA\s*▼", r"\bHSA\b"], roles=("button",), timeout_ms=10000)
+                except Exception:
+                    pass
+                time.sleep(0.8)
+
+                print("▶️ (opsional) ketik 'KLJ' di kotak cari …")
+                for search_name in ["Cari", "Search"]:
+                    try:
+                        page_ticket.get_by_role("textbox", name=search_name).first.fill("KLJ", timeout=3000)
+                        time.sleep(0.5)
+                        break
+                    except Exception:
+                        pass
+
+                print("▶️ Pilih KLJ/Klojen …")
+                picked = False
+                try:
+                    _click_any(
+                        page_ticket,
+                        [r"\bHSA\s*KLJ\b", r"\bKLJ\b", r"\bKlojen\b"],
+                        roles=("menuitem", "option", "checkbox", "button", "text"),
+                        timeout_ms=12000
+                    )
+                    picked = True
+                except Exception:
+                    picked = False
+                if not picked:
+                    raise RuntimeError("Opsi KLJ/Klojen tidak ditemukan di filter HSA")
+
+                print("▶️ Klik 'Hanya' …")
+                try:
+                    _click_any(page_ticket, [r"\bHanya\b", r"\bOnly\b"], roles=("button", "text"), timeout_ms=12000)
+                except Exception:
+                    raise RuntimeError("Tombol Hanya/Only tidak ditemukan")
+                time.sleep(1)
+
+                # === PRESENT ===
+                print("▶️ Klik tombol menu presentasi Ticket Closed Malang…")
+                try:
+                    page_ticket.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
+                    page_ticket.locator("button#more-options-header-menu-button").click()
+                except Exception:
+                    _click_any(page_ticket, ["Membuka menu dengan opsi lain", "opsi", "more options", "menu"],
+                               roles=("button", "text"), timeout_ms=10000)
+                time.sleep(8)
+
+                try:
+                    page_ticket.wait_for_selector("button#header-present-button", timeout=10000)
+                    page_ticket.locator("button#header-present-button").click()
+                except Exception:
+                    _click_any(page_ticket, ["Presentasikan", "Present"], roles=("menuitem", "button", "text"),
+                               timeout_ms=10000)
+                time.sleep(8)
+
+                # === Screenshot full page ===
+                full_screenshot_ticket = "screenshot_full_page_ticket.png"
+                page_ticket.mouse.click(10, 10)
+                time.sleep(2)
+                page_ticket.screenshot(path=full_screenshot_ticket, full_page=True)
+                send_screenshot_to_telegram(
+                    full_screenshot_ticket,
+                    f"TICKET CLOSED MALANG {MENTION_LIST}",
+                    TICKET_CHAT_IDS
+                )
+
+            except Exception as e_ticket:
+                logging.error(f"❌ Gagal saat memproses Ticket Closed Malang: {e_ticket}")
+                # (opsional) kalau mau kirim notif error ke salah satu chat khusus:
+                try:
+                    send_message(TICKET_CHAT_IDS[0], f"⚠️ Gagal mengambil screenshot Ticket Closed Malang: {e_ticket}")
+                except Exception:
+                    pass
+            finally:
+                if context_ticket:
+                    context_ticket.close()
+>>>>>>> 473e5e3 (bismillah)
 
             # === Screenshot Looker Studio ===
             logging.info("➡️ Mengambil screenshot Looker Studio...")
