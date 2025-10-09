@@ -31,7 +31,7 @@ GROUP_TARGETS = {
 
     # LAPHAR KLOJEN + MAGANG KLJ
     "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680", "-1001714188559","-4801312301"],
-    "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680", "-1001714188559","-4801312301"],
+    "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680", "-1001714188559"],
  
 
     # Hanya ke MAGANG KLJ
