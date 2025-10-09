@@ -669,7 +669,7 @@ def run_full_task(target_chat_ids=None):
                 page_ticket.screenshot(path=full_screenshot_ticket, full_page=True)
                 send_screenshot_to_telegram(
                     full_screenshot_ticket,
-                    f"TICKET CLOSED MALANG {MENTION_LIST}",
+                    f"TICKET CLOSED MALANG (HSA KLOJEN) {MENTION_LIST}",
                     TICKET_CHAT_IDS
                 )
 
@@ -748,7 +748,6 @@ def run_full_task(target_chat_ids=None):
 
                 sheet_steps = [
                     ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"),
-                    ("D30:I44", "sheet_click_2.png", "KLOJEN - UNSPEC (KLIRING)"),
                     ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
                 ]
                 for range_value, filename, caption in sheet_steps:
