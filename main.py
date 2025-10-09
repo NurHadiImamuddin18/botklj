@@ -13,7 +13,7 @@ import logging
 
 
 TELEGRAM_BOT_TOKEN = "7965696771:AAEG8DLoUOcdIVdqG4IIyAxL5j2Aa6k_v4w"
-TELEGRAM_CHAT_IDS = ["-1002755104290","-1001714188559","-1002033158680"]
+TELEGRAM_CHAT_IDS = ["-1002755104290","-1001714188559","-1002033158680","-4801312301"]
 
 # === Mapping caption -> target chat_id ===
 GROUP_TARGETS = {
@@ -40,8 +40,7 @@ GROUP_TARGETS = {
 
     # Hanya ke LAPHAR KLOJEN
 
-    "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680"],
-
+    "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680","-4801312301"],
     "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680","-4801312301"],
  
 }
@@ -496,6 +495,41 @@ def handle_time_input(chat_id, time_input):
 
     user_states.pop(chat_id, None)
 
+# --- Fungsi khusus untuk capture UNSPEC KLIRING KLOJEN ---
+def run_unspec_kliring_only():
+    logging.info("➡️ Menjalankan task khusus UNSPEC KLIRING KLOJEN (jam 10 & 22 WIB)...")
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context()
+            page = context.new_page()
+
+            # Ambil range KLIRING (D30:I44)
+            page.goto(
+                "https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=1872895195&range=D30:I44",
+                timeout=75000,
+                wait_until="domcontentloaded"
+            )
+            time.sleep(15)
+
+            element = page.locator("#scrollable_right_0 > div:nth-child(2) > div").first
+            element.wait_for(state="visible", timeout=15000)
+
+            filename = "unspec_kliring.png"
+            element.screenshot(path=filename)
+
+            caption = "KLOJEN - UNSPEC (KLIRING)"
+            target_ids = ["-1001714188559", "-1002033158680"]  # MAGANG KLJ + LAPHAR KLOJEN
+
+            send_screenshot_to_telegram(filename, caption, target_ids)
+            context.close()
+            browser.close()
+
+            logging.info("✅ UNSPEC KLIRING KLOJEN berhasil dikirim ke grup LAPHAR & MAGANG!")
+    except Exception as e:
+        logging.error(f"❌ Gagal kirim UNSPEC KLIRING: {e}")
+        for chat_id in ["-1001714188559", "-1002033158680"]:
+            send_message(chat_id, f"⚠️ Gagal mengambil screenshot UNSPEC KLIRING: {e}")
 
 # --- Fungsi utama pengambilan screenshot ---
 def run_full_task(target_chat_ids=None):
@@ -882,14 +916,134 @@ if __name__ == "__main__":
         logging.error("Pastikan Node.js dan npm terinstal, atau instal Playwright secara manual.")
         exit(1)
 
+# === Jadwal otomatis tetap untuk UNSPEC KLIRING KLOJEN (10:00 & 22:00 WIB) ===
+
+def schedule_unspec_kliring_wib():
+    """
+    Menjadwalkan pengiriman UNSPEC KLIRING jam 10:00 dan 22:00 WIB,
+    dikonversi otomatis ke UTC agar sesuai dengan waktu server.
+    """
+    # Waktu WIB yang diinginkan
+    target_times_wib = ["10:00", "22:00"]
+
+    for wib_time in target_times_wib:
+        # Konversi WIB ke UTC
+        utc_time = wib_to_utc(wib_time)
+
+        # Konversi lagi ke waktu lokal server (misal Railway = UTC)
+        local_time = utc_to_server_local_str(utc_time)
+
+        try:
+            # Daftarkan jadwal ke scheduler
+            schedule.every().day.at(local_time).do(run_unspec_kliring_only)
+            logging.info(f"🗓️ Jadwal UNSPEC KLIRING ditambahkan: {wib_time} WIB ({utc_time} UTC → {local_time} server)")
+        except Exception as e:
+            logging.warning(f"⚠️ Gagal menambahkan jadwal UNSPEC KLIRING untuk {wib_time} WIB: {e}")
+
+# === Jadwal otomatis tetap untuk UNSPEC KLIRING KLOJEN (10:00 & 22:00 WIB) ===
+
+def schedule_unspec_kliring_wib():
+    """
+    Menjadwalkan pengiriman UNSPEC KLIRING jam 10:00 dan 22:00 WIB,
+    dikonversi otomatis ke UTC agar sesuai dengan waktu server.
+    """
+    # Waktu WIB yang diinginkan
+    target_times_wib = ["10:00", "22:00"]
+
+    for wib_time in target_times_wib:
+        # Konversi WIB ke UTC
+        utc_time = wib_to_utc(wib_time)
+
+        # Konversi lagi ke waktu lokal server (misal Railway = UTC)
+        local_time = utc_to_server_local_str(utc_time)
+
+        try:
+            # Daftarkan jadwal ke scheduler
+            schedule.every().day.at(local_time).do(run_unspec_kliring_only)
+            logging.info(f"🗓️ Jadwal UNSPEC KLIRING ditambahkan: {wib_time} WIB ({utc_time} UTC → {local_time} server)")
+        except Exception as e:
+            logging.warning(f"⚠️ Gagal menambahkan jadwal UNSPEC KLIRING untuk {wib_time} WIB: {e}")
+
+# === Jadwal otomatis tetap untuk UNSPEC KLIRING KLOJEN (10:00 & 22:00 WIB) ===
+
+def schedule_unspec_kliring_wib():
+    """
+    Menjadwalkan pengiriman UNSPEC KLIRING jam 10:00 dan 22:00 WIB,
+    dikonversi otomatis ke UTC agar sesuai dengan waktu server.
+    """
+    # Waktu WIB yang diinginkan
+    target_times_wib = ["10:00", "22:00"]
+
+    for wib_time in target_times_wib:
+        # Konversi WIB ke UTC
+        utc_time = wib_to_utc(wib_time)
+
+        # Konversi lagi ke waktu lokal server (misal Railway = UTC)
+        local_time = utc_to_server_local_str(utc_time)
+
+        try:
+            # Daftarkan jadwal ke scheduler
+            schedule.every().day.at(local_time).do(run_unspec_kliring_only)
+            logging.info(f"🗓️ Jadwal UNSPEC KLIRING ditambahkan: {wib_time} WIB ({utc_time} UTC → {local_time} server)")
+        except Exception as e:
+            logging.warning(f"⚠️ Gagal menambahkan jadwal UNSPEC KLIRING untuk {wib_time} WIB: {e}")
+
+# === Jadwal otomatis tetap untuk UNSPEC KLIRING KLOJEN (10:00 & 22:00 WIB) ===
+def schedule_unspec_kliring_wib():
+    """
+    Menjadwalkan pengiriman UNSPEC KLIRING jam 10:00 dan 22:00 WIB,
+    dikonversi otomatis ke UTC agar sesuai dengan waktu server.
+    """
+    target_times_wib = ["10:00", "22:00"]
+
+    for wib_time in target_times_wib:
+        utc_time = wib_to_utc(wib_time)
+        local_time = utc_to_server_local_str(utc_time)
+        try:
+            schedule.every().day.at(local_time).do(run_unspec_kliring_only)
+            logging.info(
+                f"🗓️ Jadwal UNSPEC KLIRING ditambahkan: {wib_time} WIB ({utc_time} UTC → {local_time} server)"
+            )
+        except Exception as e:
+            logging.warning(
+                f"⚠️ Gagal menambahkan jadwal UNSPEC KLIRING untuk {wib_time} WIB: {e}"
+            )
+
+
+# --- MAIN ---
+if __name__ == "__main__":
+    logging.info("🚀 Bot memulai...")
+
+    try:
+        logging.info("⚙️ Memastikan Playwright Chromium terinstal...")
+        result = subprocess.run(
+            ["playwright", "install", "chromium"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        logging.info(result.stdout)
+        logging.info("✅ Playwright Chromium siap.")
+    except FileNotFoundError:
+        logging.error("❌ Perintah 'playwright' tidak ditemukan.")
+        logging.error("Jalankan: pip install playwright && playwright install chromium")
+        exit(1)
+    except subprocess.CalledProcessError as e:
+        logging.error(f"❌ Gagal install Chromium: {e.stderr}")
+        exit(1)
+
+    # 🔹 Setup semua jadwal dari database bot
     setup_schedule()
 
+    # 🔹 Tambahkan jadwal tetap untuk UNSPEC KLIRING (jam 10 & 22 WIB)
+    schedule_unspec_kliring_wib()
+
+    # 🔹 Jalankan listener & scheduler thread
     listener_thread = threading.Thread(target=listen_for_commands, daemon=True)
     listener_thread.setName("TelegramListener")
     listener_thread.start()
     logging.info("✅ Thread Telegram Listener dimulai.")
 
-    # Start scheduler thread (untuk menjalankan tugas terjadwal)
     scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
     scheduler_thread.setName("SchedulerLoop")
     scheduler_thread.start()
