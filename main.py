@@ -497,7 +497,7 @@ def handle_time_input(chat_id, time_input):
 
 # --- Fungsi khusus untuk capture UNSPEC KLIRING KLOJEN ---
 def run_unspec_kliring_only():
-    logging.info("➡️ Menjalankan task khusus UNSPEC KLIRING KLOJEN (jam 10 & 22 WIB)...")
+    logging.info("➡️ Menjalankan task khusus UNSPEC KLIRING KLOJEN (jam 10 WIB)...")
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
@@ -915,85 +915,14 @@ if __name__ == "__main__":
         logging.error("Pastikan Node.js dan npm terinstal, atau instal Playwright secara manual.")
         exit(1)
 
-# === Jadwal otomatis tetap untuk UNSPEC KLIRING KLOJEN (10:00 & 22:00 WIB) ===
 
+# === Jadwal otomatis tetap untuk UNSPEC KLIRING KLOJEN (10:00 WIB) ===
 def schedule_unspec_kliring_wib():
     """
-    Menjadwalkan pengiriman UNSPEC KLIRING jam 10:00 dan 22:00 WIB,
+    Menjadwalkan pengiriman UNSPEC KLIRING jam 10:00 WIB,
     dikonversi otomatis ke UTC agar sesuai dengan waktu server.
     """
-    # Waktu WIB yang diinginkan
-    target_times_wib = ["10:00", "22:00"]
-
-    for wib_time in target_times_wib:
-        # Konversi WIB ke UTC
-        utc_time = wib_to_utc(wib_time)
-
-        # Konversi lagi ke waktu lokal server (misal Railway = UTC)
-        local_time = utc_to_server_local_str(utc_time)
-
-        try:
-            # Daftarkan jadwal ke scheduler
-            schedule.every().day.at(local_time).do(run_unspec_kliring_only)
-            logging.info(f"🗓️ Jadwal UNSPEC KLIRING ditambahkan: {wib_time} WIB ({utc_time} UTC → {local_time} server)")
-        except Exception as e:
-            logging.warning(f"⚠️ Gagal menambahkan jadwal UNSPEC KLIRING untuk {wib_time} WIB: {e}")
-
-# === Jadwal otomatis tetap untuk UNSPEC KLIRING KLOJEN (10:00 & 22:00 WIB) ===
-
-def schedule_unspec_kliring_wib():
-    """
-    Menjadwalkan pengiriman UNSPEC KLIRING jam 10:00 dan 22:00 WIB,
-    dikonversi otomatis ke UTC agar sesuai dengan waktu server.
-    """
-    # Waktu WIB yang diinginkan
-    target_times_wib = ["10:00", "22:00"]
-
-    for wib_time in target_times_wib:
-        # Konversi WIB ke UTC
-        utc_time = wib_to_utc(wib_time)
-
-        # Konversi lagi ke waktu lokal server (misal Railway = UTC)
-        local_time = utc_to_server_local_str(utc_time)
-
-        try:
-            # Daftarkan jadwal ke scheduler
-            schedule.every().day.at(local_time).do(run_unspec_kliring_only)
-            logging.info(f"🗓️ Jadwal UNSPEC KLIRING ditambahkan: {wib_time} WIB ({utc_time} UTC → {local_time} server)")
-        except Exception as e:
-            logging.warning(f"⚠️ Gagal menambahkan jadwal UNSPEC KLIRING untuk {wib_time} WIB: {e}")
-
-# === Jadwal otomatis tetap untuk UNSPEC KLIRING KLOJEN (10:00 & 22:00 WIB) ===
-
-def schedule_unspec_kliring_wib():
-    """
-    Menjadwalkan pengiriman UNSPEC KLIRING jam 10:00 dan 22:00 WIB,
-    dikonversi otomatis ke UTC agar sesuai dengan waktu server.
-    """
-    # Waktu WIB yang diinginkan
-    target_times_wib = ["10:00", "22:00"]
-
-    for wib_time in target_times_wib:
-        # Konversi WIB ke UTC
-        utc_time = wib_to_utc(wib_time)
-
-        # Konversi lagi ke waktu lokal server (misal Railway = UTC)
-        local_time = utc_to_server_local_str(utc_time)
-
-        try:
-            # Daftarkan jadwal ke scheduler
-            schedule.every().day.at(local_time).do(run_unspec_kliring_only)
-            logging.info(f"🗓️ Jadwal UNSPEC KLIRING ditambahkan: {wib_time} WIB ({utc_time} UTC → {local_time} server)")
-        except Exception as e:
-            logging.warning(f"⚠️ Gagal menambahkan jadwal UNSPEC KLIRING untuk {wib_time} WIB: {e}")
-
-# === Jadwal otomatis tetap untuk UNSPEC KLIRING KLOJEN (10:00 & 22:00 WIB) ===
-def schedule_unspec_kliring_wib():
-    """
-    Menjadwalkan pengiriman UNSPEC KLIRING jam 10:00 dan 22:00 WIB,
-    dikonversi otomatis ke UTC agar sesuai dengan waktu server.
-    """
-    target_times_wib = ["10:00", "22:00"]
+    target_times_wib = ["10:00"]
 
     for wib_time in target_times_wib:
         utc_time = wib_to_utc(wib_time)
