@@ -13,30 +13,18 @@ import logging
 
 
 TELEGRAM_BOT_TOKEN = "7965696771:AAEG8DLoUOcdIVdqG4IIyAxL5j2Aa6k_v4w"
-TELEGRAM_CHAT_IDS = ["-1002755104290","-1001714188559","-1002033158680","-4801312301"]
+TELEGRAM_CHAT_IDS = ["-1002755104290","-1002033158680","-4801312301"]
 
 # === Mapping caption -> target chat_id ===
 GROUP_TARGETS = {
-    # WO DAN QC2 KLJ + MAGANG KLJ
+    # WO DAN QC2 KLJ
  
-    "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002755104290", "-1001714188559"],
-    "Produktifitas Teknisi PSB Klojen": ["-1002755104290", "-1001714188559"],
+    "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @Yna_as @wiwikastut": ["-1002755104290"],
+    "Produktifitas Teknisi PSB Klojen": ["-1002755104290"],
 
-    # LAPHAR KLOJEN + MAGANG KLJ
-    "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680", "-1001714188559"],
-    "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680", "-1001714188559"],
-
-    "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002755104290", "-1001714188559","-4801312301"],
-    "Produktifitas Teknisi PSB Klojen": ["-1002755104290", "-1001714188559","-4801312301"],
-
-    # LAPHAR KLOJEN + MAGANG KLJ
-    "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut": ["-1002033158680", "-1001714188559","-4801312301"],
-    "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680", "-1001714188559"],
- 
-
-    # Hanya ke MAGANG KLJ
-    "Unspec B2B Klojen": ["-1001714188559","-4801312301"],
-    "Detail Order PSB Klojen": ["-1001714188559","-4801312301"],
+    # LAPHAR KLOJEN
+    "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong @wiwikastut": ["-1002033158680"],
+    "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680"],
 
     # Hanya ke LAPHAR KLOJEN
 
@@ -718,8 +706,6 @@ def run_full_task(target_chat_ids=None):
                 actions_looker = [
                     (page_looker.locator(".lego-component.simple-table > .front > .component").first,
                      "Produktifitas Teknisi PSB Klojen"),
-                    (page_looker.locator(".lego-component.simple-table.cd-mq84137tsd > .front > .component"),
-                     "Detail Order PSB Klojen"),
                 ]
                 for idx, (locator, caption) in enumerate(actions_looker, start=1):
                     filename = f"click_looker_{idx}.png"
@@ -748,7 +734,6 @@ def run_full_task(target_chat_ids=None):
 
                 sheet_steps = [
                     ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong @wiwikastut"),
-                    ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
                 ]
                 for range_value, filename, caption in sheet_steps:
                     try:
