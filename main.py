@@ -730,7 +730,6 @@ def run_full_task(target_chat_ids=None):
 
                 sheet_steps = [
                     ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"),
-                    ("M9:T24", "sheet_click_3.png", "Unspec B2B Klojen"),
                 ]
                 for range_value, filename, caption in sheet_steps:
                     try:
