@@ -13,28 +13,34 @@ import logging
 
 
 TELEGRAM_BOT_TOKEN = "7965696771:AAEG8DLoUOcdIVdqG4IIyAxL5j2Aa6k_v4w"
-TELEGRAM_CHAT_IDS = ["-1002755104290","-1002033158680"]
+TELEGRAM_CHAT_IDS = ["-1002755104290", "-1002033158680"]
 
 # === Mapping caption -> target chat_id ===
 GROUP_TARGETS = {
     # WO DAN QC2 KLJ
- 
-    "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @Yna_as @wiwikastut": ["-1002755104290"],
+    "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @Yna_as @wiwikastut": [
+        "-1002755104290"
+    ],
     "Produktifitas Teknisi PSB Klojen": ["-1002755104290"],
-
     # LAPHAR KLOJEN
-    "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong": ["-1002033158680"],
+    "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong": [
+        "-1002033158680"
+    ],
     "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680"],
-    "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong": ["-1002033158680"],
- 
+    "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong": [
+        "-1002033158680"
+    ],
 }
+
 
 # === Fungsi kirim screenshot ke grup sesuai caption ===
 def send_screenshot_to_telegram(file_path, caption):
     # Ambil target group sesuai caption
     target_groups = GROUP_TARGETS.get(caption, [])
     if not target_groups:
-        logging.warning(f"⚠️ Caption {caption} tidak ada di GROUP_TARGETS, tidak ada grup tujuan.")
+        logging.warning(
+            f"⚠️ Caption {caption} tidak ada di GROUP_TARGETS, tidak ada grup tujuan."
+        )
         return
 
     for chat_id in target_groups:
@@ -44,9 +50,11 @@ def send_screenshot_to_telegram(file_path, caption):
                 requests.post(
                     url,
                     data={"chat_id": chat_id, "caption": caption},
-                    files={"photo": f}
+                    files={"photo": f},
                 )
-                logging.info(f"✅ Screenshot {file_path} terkirim ke {chat_id} ({caption})")
+                logging.info(
+                    f"✅ Screenshot {file_path} terkirim ke {chat_id} ({caption})"
+                )
         except Exception as e:
             logging.error(f"❌ Gagal kirim {file_path} ke {chat_id}: {e}")
 
@@ -54,7 +62,9 @@ def send_screenshot_to_telegram(file_path, caption):
 API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
 # --- Logging ---
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 is_running = False
 
@@ -63,10 +73,11 @@ schedules_data = {
     "05:59": {"active": True, "id": "schedule_2"},
     "09:59": {"active": True, "id": "schedule_3"},
     "11:59": {"active": True, "id": "schedule_4"},
-    "14:59": {"active": True, "id": "schedule_5"}
+    "14:59": {"active": True, "id": "schedule_5"},
 }
 
 user_states = {}
+
 
 # --- Fungsi helper untuk konversi waktu ---
 def wib_to_utc(wib_time_str):
@@ -138,7 +149,7 @@ def format_datetime_with_wib(dt):
     wib_tz = timezone(timedelta(hours=7))
     try:
         if dt is None:
-            return 'Tidak ada'
+            return "Tidak ada"
 
         # Jika dt adalah string, coba parsing beberapa format umum
         if isinstance(dt, str):
@@ -157,7 +168,7 @@ def format_datetime_with_wib(dt):
             dt = dt.replace(tzinfo=local_tz)
 
         wib_time = dt.astimezone(wib_tz)
-        return wib_time.strftime('%H:%M pada %d/%m/%Y (WIB)')
+        return wib_time.strftime("%H:%M pada %d/%m/%Y (WIB)")
     except Exception as e:
         logging.warning(f"⚠️ format_datetime_with_wib gagal untuk {dt}: {e}")
         return str(dt)
@@ -194,7 +205,7 @@ def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
                 resp = requests.post(
                     f"{API_URL}/sendPhoto",
                     data={"chat_id": chat_id, "caption": caption, "parse_mode": "HTML"},
-                    files={"photo": photo}
+                    files={"photo": photo},
                 )
                 resp.raise_for_status()
             logging.info(f"✅ {image_path} terkirim ke {chat_id} ({caption})")
@@ -202,7 +213,9 @@ def send_screenshot_to_telegram(image_path, caption, target_chat_ids=None):
         except requests.exceptions.RequestException as e:
             logging.error(f"❌ Gagal kirim {image_path} ke {chat_id}: {e}")
         except Exception as e:
-            logging.error(f"❌ Error tak terduga saat kirim {image_path} ke {chat_id}: {e}")
+            logging.error(
+                f"❌ Error tak terduga saat kirim {image_path} ke {chat_id}: {e}"
+            )
 
     # Hapus file sekali setelah semua chat selesai
     if success:
@@ -231,9 +244,7 @@ def send_message(chat_id, text, reply_markup=None):
 
 # --- Fungsi untuk membuat inline keyboard ---
 def create_inline_keyboard(buttons):
-    return {
-        "inline_keyboard": buttons
-    }
+    return {"inline_keyboard": buttons}
 
 
 # --- Setup ulang jadwal ---
@@ -258,11 +269,14 @@ def setup_schedule():
                 datetime.strptime(schedule_time_local, "%H:%M")
 
                 # Jadwalkan pada waktu lokal server — schedule library menginterpretasikan waktu sebagai waktu lokal
-                schedule.every().day.at(schedule_time_local).do(run_full_task).tag(data["id"])
+                schedule.every().day.at(schedule_time_local).do(run_full_task).tag(
+                    data["id"]
+                )
                 active_count += 1
 
                 logging.info(
-                    f"🗓️ Terjadwal: id={data['id']} | stored_utc={time_str} | local_time={schedule_time_local}")
+                    f"🗓️ Terjadwal: id={data['id']} | stored_utc={time_str} | local_time={schedule_time_local}"
+                )
             except ValueError:
                 logging.warning(f"⚠️ Jadwal '{time_str}' tidak valid, dilewati.")
     logging.info(f"📅 Jadwal diperbarui: {active_count} jadwal aktif")
@@ -280,8 +294,14 @@ def show_next_schedule():
 
 # --- Command: /showtime ---
 def handle_showtime(chat_id):
-    active_schedules = [(time_str, data) for time_str, data in schedules_data.items() if data["active"]]
-    inactive_schedules = [(time_str, data) for time_str, data in schedules_data.items() if not data["active"]]
+    active_schedules = [
+        (time_str, data) for time_str, data in schedules_data.items() if data["active"]
+    ]
+    inactive_schedules = [
+        (time_str, data)
+        for time_str, data in schedules_data.items()
+        if not data["active"]
+    ]
 
     message = "📋 **STATUS JADWAL**\n\n"
 
@@ -311,8 +331,10 @@ def handle_showtime(chat_id):
 def handle_settime(chat_id):
     if not schedules_data:
         user_states[chat_id] = {"action": "settime_input", "old_time": None}
-        send_message(chat_id,
-                     "➕ **TAMBAH JADWAL BARU**\n\nAnda belum memiliki jadwal. Masukkan waktu untuk jadwal baru:\nFormat: `HH:MM` (contoh: `16:30`)\n\n*Catatan: Masukkan waktu dalam **WIB** - bot akan otomatis mengkonversi ke UTC*")
+        send_message(
+            chat_id,
+            "➕ **TAMBAH JADWAL BARU**\n\nAnda belum memiliki jadwal. Masukkan waktu untuk jadwal baru:\nFormat: `HH:MM` (contoh: `16:30`)\n\n*Catatan: Masukkan waktu dalam **WIB** - bot akan otomatis mengkonversi ke UTC*",
+        )
         return
 
     # Buat keyboard dengan jadwal yang ada
@@ -323,30 +345,42 @@ def handle_settime(chat_id):
         # Konversi UTC ke WIB untuk tampilan tombol
         try:
             wib_str = utc_to_wib(time_str)
-            buttons.append([{
-                "text": f"{status} {wib_str} WIB ({time_str} UTC)",
-                "callback_data": f"edit_{time_str}"
-            }])
+            buttons.append(
+                [
+                    {
+                        "text": f"{status} {wib_str} WIB ({time_str} UTC)",
+                        "callback_data": f"edit_{time_str}",
+                    }
+                ]
+            )
         except Exception:
-            buttons.append([{
-                "text": f"{status} {time_str} UTC",
-                "callback_data": f"edit_{time_str}"
-            }])
+            buttons.append(
+                [
+                    {
+                        "text": f"{status} {time_str} UTC",
+                        "callback_data": f"edit_{time_str}",
+                    }
+                ]
+            )
 
     buttons.append([{"text": "➕ Tambah Jadwal Baru", "callback_data": "add_new"}])
     buttons.append([{"text": "❌ Batal", "callback_data": "cancel"}])
 
     reply_markup = create_inline_keyboard(buttons)
-    send_message(chat_id,
-                 "⚙️ **PENGATURAN JADWAL**\n\nPilih jadwal yang ingin diubah/aktifkan/nonaktifkan atau tambah jadwal baru:\n\n*Catatan: Input waktu dalam **WIB** - ditampilkan WIB (UTC)*",
-                 reply_markup)
+    send_message(
+        chat_id,
+        "⚙️ **PENGATURAN JADWAL**\n\nPilih jadwal yang ingin diubah/aktifkan/nonaktifkan atau tambah jadwal baru:\n\n*Catatan: Input waktu dalam **WIB** - ditampilkan WIB (UTC)*",
+        reply_markup,
+    )
 
     user_states[chat_id] = {"action": "settime_select"}
 
 
 # --- Command: /deltime ---
 def handle_deltime(chat_id):
-    active_schedules = {time_str: data for time_str, data in schedules_data.items() if data["active"]}
+    active_schedules = {
+        time_str: data for time_str, data in schedules_data.items() if data["active"]
+    }
 
     if not active_schedules:
         send_message(chat_id, "❌ Tidak ada jadwal aktif untuk dihapus.")
@@ -358,21 +392,27 @@ def handle_deltime(chat_id):
         # Konversi UTC ke WIB untuk tampilan tombol
         try:
             wib_str = utc_to_wib(time_str)
-            buttons.append([{
-                "text": f"🗑️ {wib_str} WIB ({time_str} UTC)",
-                "callback_data": f"delete_{time_str}"
-            }])
+            buttons.append(
+                [
+                    {
+                        "text": f"🗑️ {wib_str} WIB ({time_str} UTC)",
+                        "callback_data": f"delete_{time_str}",
+                    }
+                ]
+            )
         except Exception:
-            buttons.append([{
-                "text": f"🗑️ {time_str} UTC",
-                "callback_data": f"delete_{time_str}"
-            }])
+            buttons.append(
+                [{"text": f"🗑️ {time_str} UTC", "callback_data": f"delete_{time_str}"}]
+            )
 
     buttons.append([{"text": "❌ Batal", "callback_data": "cancel"}])
 
     reply_markup = create_inline_keyboard(buttons)
-    send_message(chat_id, "🗑️ **HAPUS JADWAL**\n\nPilih jadwal yang ingin dihapus:\n\n*Catatan: Ditampilkan WIB (UTC)*",
-                 reply_markup)
+    send_message(
+        chat_id,
+        "🗑️ **HAPUS JADWAL**\n\nPilih jadwal yang ingin dihapus:\n\n*Catatan: Ditampilkan WIB (UTC)*",
+        reply_markup,
+    )
 
     user_states[chat_id] = {"action": "deltime_select"}
 
@@ -385,7 +425,10 @@ def handle_callback_query(callback_query):
 
     # Answer callback query untuk menghilangkan loading status di tombol
     try:
-        requests.post(f"{API_URL}/answerCallbackQuery", data={"callback_query_id": callback_query_id})
+        requests.post(
+            f"{API_URL}/answerCallbackQuery",
+            data={"callback_query_id": callback_query_id},
+        )
     except requests.exceptions.RequestException as e:
         logging.warning(f"Gagal menjawab callback query {callback_query_id}: {e}")
 
@@ -399,10 +442,14 @@ def handle_callback_query(callback_query):
         time_str = data.replace("edit_", "")
         if time_str in schedules_data:
             user_states[chat_id] = {"action": "settime_input", "old_time": time_str}
-            current_status = "aktif" if schedules_data[time_str]["active"] else "nonaktif"
+            current_status = (
+                "aktif" if schedules_data[time_str]["active"] else "nonaktif"
+            )
             current_wib = utc_to_wib(time_str)
-            send_message(chat_id,
-                         f"⏰ **UBAH JADWAL**\n\nJadwal saat ini: `{current_wib}` WIB ({current_status})\n\nSilakan masukkan waktu baru dalam **WIB** (atau waktu yang sama untuk mengubah status aktif/nonaktifnya).\nFormat: `HH:MM` (contoh: `16:30`)\n\n*Catatan: Input waktu dalam **WIB** - bot akan otomatis mengkonversi ke UTC*")
+            send_message(
+                chat_id,
+                f"⏰ **UBAH JADWAL**\n\nJadwal saat ini: `{current_wib}` WIB ({current_status})\n\nSilakan masukkan waktu baru dalam **WIB** (atau waktu yang sama untuk mengubah status aktif/nonaktifnya).\nFormat: `HH:MM` (contoh: `16:30`)\n\n*Catatan: Input waktu dalam **WIB** - bot akan otomatis mengkonversi ke UTC*",
+            )
         else:
             send_message(chat_id, "❌ Jadwal tidak ditemukan.")
             user_states.pop(chat_id, None)
@@ -410,8 +457,10 @@ def handle_callback_query(callback_query):
 
     if data == "add_new":
         user_states[chat_id] = {"action": "settime_input", "old_time": None}
-        send_message(chat_id,
-                     "➕ **TAMBAH JADWAL BARU**\n\nMasukkan waktu untuk jadwal baru:\nFormat: `HH:MM` (contoh: `16:30`)\n\n*Catatan: Masukkan waktu dalam **WIB** - bot akan otomatis mengkonversi ke UTC*")
+        send_message(
+            chat_id,
+            "➕ **TAMBAH JADWAL BARU**\n\nMasukkan waktu untuk jadwal baru:\nFormat: `HH:MM` (contoh: `16:30`)\n\n*Catatan: Masukkan waktu dalam **WIB** - bot akan otomatis mengkonversi ke UTC*",
+        )
         return
 
     # Handle deltime
@@ -420,7 +469,10 @@ def handle_callback_query(callback_query):
         if time_str in schedules_data:
             schedules_data[time_str]["active"] = False
             setup_schedule()
-            send_message(chat_id, f"✅ Jadwal {format_time_with_wib(time_str)} berhasil dinonaktifkan.")
+            send_message(
+                chat_id,
+                f"✅ Jadwal {format_time_with_wib(time_str)} berhasil dinonaktifkan.",
+            )
         else:
             send_message(chat_id, f"❌ Jadwal `{time_str}` tidak ditemukan.")
         user_states.pop(chat_id, None)
@@ -439,8 +491,10 @@ def validate_time_format(time_str):
 # --- Handle input waktu dari user ---
 def handle_time_input(chat_id, time_input):
     if not validate_time_format(time_input):
-        send_message(chat_id,
-                     "❌ Format waktu tidak valid! Gunakan format `HH:MM` (contoh: `16:30`)\n\n*Catatan: Masukkan waktu dalam **WIB** - bot akan otomatis mengkonversi ke UTC*")
+        send_message(
+            chat_id,
+            "❌ Format waktu tidak valid! Gunakan format `HH:MM` (contoh: `16:30`)\n\n*Catatan: Masukkan waktu dalam **WIB** - bot akan otomatis mengkonversi ke UTC*",
+        )
         return
 
     user_state = user_states.get(chat_id, {})
@@ -455,15 +509,26 @@ def handle_time_input(chat_id, time_input):
             old_time_wib = utc_to_wib(old_time_utc)
             if time_input == old_time_wib:
                 # Toggle status aktif/nonaktif
-                schedules_data[old_time_utc]["active"] = not schedules_data[old_time_utc]["active"]
-                status_text = "diaktifkan" if schedules_data[old_time_utc]["active"] else "dinonaktifkan"
-                send_message(chat_id, f"✅ Jadwal `{time_input}` WIB berhasil {status_text}.")
+                schedules_data[old_time_utc]["active"] = not schedules_data[
+                    old_time_utc
+                ]["active"]
+                status_text = (
+                    "diaktifkan"
+                    if schedules_data[old_time_utc]["active"]
+                    else "dinonaktifkan"
+                )
+                send_message(
+                    chat_id, f"✅ Jadwal `{time_input}` WIB berhasil {status_text}."
+                )
             else:
                 # Ubah waktu jadwal
                 del schedules_data[old_time_utc]
                 new_schedule_id = f"schedule_{int(time.time())}"
                 schedules_data[new_time_utc] = {"active": True, "id": new_schedule_id}
-                send_message(chat_id, f"✅ Jadwal berhasil diubah dari `{old_time_wib}` WIB ke `{time_input}` WIB.")
+                send_message(
+                    chat_id,
+                    f"✅ Jadwal berhasil diubah dari `{old_time_wib}` WIB ke `{time_input}` WIB.",
+                )
             setup_schedule()
         else:
             send_message(chat_id, f"❌ Jadwal tidak ditemukan.")
@@ -475,9 +540,12 @@ def handle_time_input(chat_id, time_input):
             new_schedule_id = f"schedule_{int(time.time())}"
             schedules_data[new_time_utc] = {"active": True, "id": new_schedule_id}
             setup_schedule()
-            send_message(chat_id, f"✅ Jadwal baru `{time_input}` WIB berhasil ditambahkan.")
+            send_message(
+                chat_id, f"✅ Jadwal baru `{time_input}` WIB berhasil ditambahkan."
+            )
 
     user_states.pop(chat_id, None)
+
 
 # --- Fungsi khusus untuk capture UNSPEC KLIRING KLOJEN ---
 def run_unspec_kliring_only():
@@ -492,7 +560,7 @@ def run_unspec_kliring_only():
             page.goto(
                 "https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=1872895195&range=D30:I44",
                 timeout=75000,
-                wait_until="domcontentloaded"
+                wait_until="domcontentloaded",
             )
             time.sleep(15)
 
@@ -503,17 +571,18 @@ def run_unspec_kliring_only():
             element.screenshot(path=filename)
 
             caption = "KLOJEN - UNSPEC (KLIRING)"
-            target_ids = ["-1001714188559", "-1002033158680"]  # MAGANG KLJ + LAPHAR KLOJEN
+            target_ids = ["-1002033158680"]  # LAPHAR KLOJEN
 
             send_screenshot_to_telegram(filename, caption, target_ids)
             context.close()
             browser.close()
 
-            logging.info("✅ UNSPEC KLIRING KLOJEN berhasil dikirim ke grup LAPHAR & MAGANG!")
+            logging.info("✅ UNSPEC KLIRING KLOJEN berhasil dikirim ke grup LAPHAR")
     except Exception as e:
         logging.error(f"❌ Gagal kirim UNSPEC KLIRING: {e}")
-        for chat_id in ["-1001714188559", "-1002033158680"]:
+        for chat_id in ["-1002033158680"]:
             send_message(chat_id, f"⚠️ Gagal mengambil screenshot UNSPEC KLIRING: {e}")
+
 
 # --- Fungsi utama pengambilan screenshot ---
 def run_full_task(target_chat_ids=None):
@@ -521,8 +590,10 @@ def run_full_task(target_chat_ids=None):
     if is_running:
         logging.warning("⚠️ Task sedang berjalan, permintaan diabaikan.")
         if target_chat_ids:
-            send_message(target_chat_ids[0],
-                         "⚠️ Maaf, task pengambilan screenshot sedang berjalan. Silakan coba lagi nanti.")
+            send_message(
+                target_chat_ids[0],
+                "⚠️ Maaf, task pengambilan screenshot sedang berjalan. Silakan coba lagi nanti.",
+            )
         return
 
     is_running = True
@@ -536,33 +607,37 @@ def run_full_task(target_chat_ids=None):
     logging.info(f"\n--- Mulai task screenshot untuk {target_chat_ids} ---")
 
     if is_manual_trigger:
-        send_message(target_chat_ids[0], "⏳ Memulai proses pengambilan screenshot. Mohon tunggu...")
+        send_message(
+            target_chat_ids[0],
+            "⏳ Memulai proses pengambilan screenshot. Mohon tunggu...",
+        )
 
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
 
-
-
-            
-                        # === Screenshot Ticket Closed Malang (langsung HSA KLJ) ===
+            # === Screenshot Ticket Closed Malang (langsung HSA KLJ) ===
             logging.info("➡️ Mengambil screenshot Ticket Closed Malang...")
             context_ticket = browser.new_context(
                 viewport={"width": 525, "height": 635},
                 device_scale_factor=2.6,
                 is_mobile=True,
                 user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) "
-                           "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 "
-                           "Mobile/15A372 Safari/604.1"
+                "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 "
+                "Mobile/15A372 Safari/604.1",
             )
             page_ticket = context_ticket.new_page()
 
             MENTION_LIST = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong"
-            TICKET_CHAT_IDS = ["-1002033158680", "-4801312301"]  # kirim hanya ke dua chat ini
+            TICKET_CHAT_IDS = [
+                "-1002033158680",
+                "-4801312301",
+            ]  # kirim hanya ke dua chat ini
 
             # helper kecil: klik by role/text di page & semua iframe
             def _click_any(page, names, roles=("button",), timeout_ms=10000):
                 import time, re
+
                 if isinstance(names, str):
                     names = [names]
                 deadline = time.time() + (timeout_ms / 1000.0)
@@ -573,9 +648,13 @@ def run_full_task(target_chat_ids=None):
                             for nm in names:
                                 try:
                                     if role == "text":
-                                        target.get_by_text(re.compile(nm, re.I)).first.click(timeout=1200)
+                                        target.get_by_text(
+                                            re.compile(nm, re.I)
+                                        ).first.click(timeout=1200)
                                     else:
-                                        target.get_by_role(role, name=re.compile(nm, re.I)).first.click(timeout=1200)
+                                        target.get_by_role(
+                                            role, name=re.compile(nm, re.I)
+                                        ).first.click(timeout=1200)
                                     return True
                                 except Exception as e:
                                     last_err = e
@@ -585,14 +664,19 @@ def run_full_task(target_chat_ids=None):
             try:
                 page_ticket.goto(
                     "https://lookerstudio.google.com/reporting/51904749-2d6e-4940-8642-3313ee62cb44/page/RCIgE",
-                    timeout=60000
+                    timeout=60000,
                 )
                 time.sleep(60)
 
                 # === PILIH HSA KLJ -> HANYA ===
                 print("▶️ Buka filter HSA ▼ …")
                 try:
-                    _click_any(page_ticket, [r"HSA\s*▼", r"\bHSA\b"], roles=("button",), timeout_ms=10000)
+                    _click_any(
+                        page_ticket,
+                        [r"HSA\s*▼", r"\bHSA\b"],
+                        roles=("button",),
+                        timeout_ms=10000,
+                    )
                 except Exception:
                     pass
                 time.sleep(0.8)
@@ -600,7 +684,9 @@ def run_full_task(target_chat_ids=None):
                 print("▶️ (opsional) ketik 'KLJ' di kotak cari …")
                 for search_name in ["Cari", "Search"]:
                     try:
-                        page_ticket.get_by_role("textbox", name=search_name).first.fill("KLJ", timeout=3000)
+                        page_ticket.get_by_role("textbox", name=search_name).first.fill(
+                            "KLJ", timeout=3000
+                        )
                         time.sleep(0.5)
                         break
                     except Exception:
@@ -613,7 +699,7 @@ def run_full_task(target_chat_ids=None):
                         page_ticket,
                         [r"\bHSA\s*KLJ\b", r"\bKLJ\b", r"\bKlojen\b"],
                         roles=("menuitem", "option", "checkbox", "button", "text"),
-                        timeout_ms=12000
+                        timeout_ms=12000,
                     )
                     picked = True
                 except Exception:
@@ -623,7 +709,12 @@ def run_full_task(target_chat_ids=None):
 
                 print("▶️ Klik 'Hanya' …")
                 try:
-                    _click_any(page_ticket, [r"\bHanya\b", r"\bOnly\b"], roles=("button", "text"), timeout_ms=12000)
+                    _click_any(
+                        page_ticket,
+                        [r"\bHanya\b", r"\bOnly\b"],
+                        roles=("button", "text"),
+                        timeout_ms=12000,
+                    )
                 except Exception:
                     raise RuntimeError("Tombol Hanya/Only tidak ditemukan")
                 time.sleep(1)
@@ -631,19 +722,38 @@ def run_full_task(target_chat_ids=None):
                 # === PRESENT ===
                 print("▶️ Klik tombol menu presentasi Ticket Closed Malang…")
                 try:
-                    page_ticket.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
-                    page_ticket.locator("button#more-options-header-menu-button").click()
+                    page_ticket.wait_for_selector(
+                        "button#more-options-header-menu-button", timeout=10000
+                    )
+                    page_ticket.locator(
+                        "button#more-options-header-menu-button"
+                    ).click()
                 except Exception:
-                    _click_any(page_ticket, ["Membuka menu dengan opsi lain", "opsi", "more options", "menu"],
-                               roles=("button", "text"), timeout_ms=10000)
+                    _click_any(
+                        page_ticket,
+                        [
+                            "Membuka menu dengan opsi lain",
+                            "opsi",
+                            "more options",
+                            "menu",
+                        ],
+                        roles=("button", "text"),
+                        timeout_ms=10000,
+                    )
                 time.sleep(8)
 
                 try:
-                    page_ticket.wait_for_selector("button#header-present-button", timeout=10000)
+                    page_ticket.wait_for_selector(
+                        "button#header-present-button", timeout=10000
+                    )
                     page_ticket.locator("button#header-present-button").click()
                 except Exception:
-                    _click_any(page_ticket, ["Presentasikan", "Present"], roles=("menuitem", "button", "text"),
-                               timeout_ms=10000)
+                    _click_any(
+                        page_ticket,
+                        ["Presentasikan", "Present"],
+                        roles=("menuitem", "button", "text"),
+                        timeout_ms=10000,
+                    )
                 time.sleep(8)
 
                 # === Screenshot full page ===
@@ -654,20 +764,24 @@ def run_full_task(target_chat_ids=None):
                 send_screenshot_to_telegram(
                     full_screenshot_ticket,
                     f"TICKET CLOSED MALANG (HSA KLOJEN) {MENTION_LIST}",
-                    TICKET_CHAT_IDS
+                    TICKET_CHAT_IDS,
                 )
 
             except Exception as e_ticket:
-                logging.error(f"❌ Gagal saat memproses Ticket Closed Malang: {e_ticket}")
+                logging.error(
+                    f"❌ Gagal saat memproses Ticket Closed Malang: {e_ticket}"
+                )
                 # (opsional) kalau mau kirim notif error ke salah satu chat khusus:
                 try:
-                    send_message(TICKET_CHAT_IDS[0], f"⚠️ Gagal mengambil screenshot Ticket Closed Malang: {e_ticket}")
+                    send_message(
+                        TICKET_CHAT_IDS[0],
+                        f"⚠️ Gagal mengambil screenshot Ticket Closed Malang: {e_ticket}",
+                    )
                 except Exception:
                     pass
             finally:
                 if context_ticket:
                     context_ticket.close()
- 
 
             # === Screenshot Looker Studio ===
             logging.info("➡️ Mengambil screenshot Looker Studio...")
@@ -675,21 +789,26 @@ def run_full_task(target_chat_ids=None):
                 viewport={"width": 525, "height": 635},
                 device_scale_factor=2.6,
                 is_mobile=True,
-                user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15A372 Safari/604.1"
+                user_agent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15A372 Safari/604.1",
             )
             page_looker = context_looker.new_page()
 
             try:
                 page_looker.goto(
                     "https://lookerstudio.google.com/reporting/ef7aa823-d379-4eca-8c7c-f0ff47a9924b/page/p_rgveqlnbkd",
-                    timeout=60000)
+                    timeout=60000,
+                )
                 time.sleep(60)
 
                 print("▶️ Klik tombol menu presentasi…")
-                page_looker.wait_for_selector("button#more-options-header-menu-button", timeout=10000)
+                page_looker.wait_for_selector(
+                    "button#more-options-header-menu-button", timeout=10000
+                )
                 page_looker.locator("button#more-options-header-menu-button").click()
                 time.sleep(10)
-                page_looker.wait_for_selector("button#header-present-button", timeout=10000)
+                page_looker.wait_for_selector(
+                    "button#header-present-button", timeout=10000
+                )
                 page_looker.locator("button#header-present-button").click()
                 time.sleep(10)
 
@@ -697,11 +816,18 @@ def run_full_task(target_chat_ids=None):
                 page_looker.mouse.click(10, 10)
                 time.sleep(2)
                 page_looker.screenshot(path=full_screenshot_looker, full_page=True)
-                send_screenshot_to_telegram(full_screenshot_looker, "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @Yna_as @wiwikastut")
+                send_screenshot_to_telegram(
+                    full_screenshot_looker,
+                    "DASHBOARD PROVISIONING TSEL @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @Yna_as @wiwikastut",
+                )
 
                 actions_looker = [
-                    (page_looker.locator(".lego-component.simple-table > .front > .component").first,
-                     "Produktifitas Teknisi PSB Klojen"),
+                    (
+                        page_looker.locator(
+                            ".lego-component.simple-table > .front > .component"
+                        ).first,
+                        "Produktifitas Teknisi PSB Klojen",
+                    ),
                 ]
                 for idx, (locator, caption) in enumerate(actions_looker, start=1):
                     filename = f"click_looker_{idx}.png"
@@ -710,12 +836,17 @@ def run_full_task(target_chat_ids=None):
                         locator.click()
                         send_screenshot_to_telegram(filename, caption)
                     except Exception as e_inner:
-                        logging.error(f"❌ Gagal screenshot elemen Looker {idx}: {e_inner}")
+                        logging.error(
+                            f"❌ Gagal screenshot elemen Looker {idx}: {e_inner}"
+                        )
 
             except Exception as e_looker:
                 logging.error(f"❌ Gagal saat memproses Looker Studio: {e_looker}")
                 if target_chat_ids:
-                    send_message(target_chat_ids[0], f"⚠️ Gagal mengambil screenshot Looker Studio: {e_looker}")
+                    send_message(
+                        target_chat_ids[0],
+                        f"⚠️ Gagal mengambil screenshot Looker Studio: {e_looker}",
+                    )
             finally:
                 if context_looker:
                     context_looker.close()
@@ -729,25 +860,35 @@ def run_full_task(target_chat_ids=None):
                 page_sheet = context_sheet.new_page()
 
                 sheet_steps = [
-                    ("D9:J23", "sheet_click_1.png", "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"),
+                    (
+                        "D9:J23",
+                        "sheet_click_1.png",
+                        "unspec B2C Klojen @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong",
+                    ),
                 ]
                 for range_value, filename, caption in sheet_steps:
                     try:
                         page_sheet.goto(
                             f"https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=1872895195&range={range_value}",
                             timeout=75000,
-                            wait_until="domcontentloaded"
+                            wait_until="domcontentloaded",
                         )
                         time.sleep(15)
-                        element = page_sheet.locator("#scrollable_right_0 > div:nth-child(2) > div").first
+                        element = page_sheet.locator(
+                            "#scrollable_right_0 > div:nth-child(2) > div"
+                        ).first
                         element.wait_for(state="visible", timeout=15000)
                         element.screenshot(path=filename)
                         send_screenshot_to_telegram(filename, caption)
                     except Exception as e_sheet_inner:
-                        logging.error(f"❌ Gagal saat memproses Google Sheet range {range_value}: {e_sheet_inner}")
+                        logging.error(
+                            f"❌ Gagal saat memproses Google Sheet range {range_value}: {e_sheet_inner}"
+                        )
                         if target_chat_ids:
-                            send_message(target_chat_ids[0],
-                                         f"⚠️ Gagal mengambil screenshot Google Sheet (Range {range_value}): {e_sheet_inner}")
+                            send_message(
+                                target_chat_ids[0],
+                                f"⚠️ Gagal mengambil screenshot Google Sheet (Range {range_value}): {e_sheet_inner}",
+                            )
             finally:
                 if context_sheet:
                     context_sheet.close()
@@ -755,12 +896,18 @@ def run_full_task(target_chat_ids=None):
             browser.close()
 
             if is_manual_trigger:
-                send_message(target_chat_ids[0], "✅ Pengambilan screenshot selesai dan telah dikirim.")
+                send_message(
+                    target_chat_ids[0],
+                    "✅ Pengambilan screenshot selesai dan telah dikirim.",
+                )
 
     except Exception as e:
         logging.error(f"❌ Error fatal saat menjalankan task screenshot: {e}")
         if target_chat_ids:
-            send_message(target_chat_ids[0], f"❌ Terjadi kesalahan fatal saat menjalankan task: {e}")
+            send_message(
+                target_chat_ids[0],
+                f"❌ Terjadi kesalahan fatal saat menjalankan task: {e}",
+            )
     finally:
         is_running = False
         logging.info(f"--- Task screenshot selesai ---")
@@ -798,7 +945,9 @@ def listen_for_commands():
     offset = None
     while True:
         try:
-            resp = requests.get(f"{API_URL}/getUpdates", params={"offset": offset, "timeout": 60})
+            resp = requests.get(
+                f"{API_URL}/getUpdates", params={"offset": offset, "timeout": 60}
+            )
             resp.raise_for_status()
             data = resp.json()
 
@@ -808,7 +957,10 @@ def listen_for_commands():
 
                     # Handle callback query (dari inline keyboard)
                     if "callback_query" in update:
-                        threading.Thread(target=handle_callback_query, args=(update["callback_query"],)).start()
+                        threading.Thread(
+                            target=handle_callback_query,
+                            args=(update["callback_query"],),
+                        ).start()
                         continue
 
                     # Handle message biasa
@@ -822,24 +974,37 @@ def listen_for_commands():
                     from_user = message.get("from", {}).get("username", "unknown_user")
 
                     logging.info(
-                        f"📩 Pesan dari @{from_user} | chat_id={chat_id} | type={chat_type} | title='{chat_title}' | text='{text}'")
+                        f"📩 Pesan dari @{from_user} | chat_id={chat_id} | type={chat_type} | title='{chat_title}' | text='{text}'"
+                    )
 
                     # Handle commands
                     if text.lower() == "/start":
-                        logging.info(f"▶ Menerima command /start dari chat_id={chat_id}")
+                        logging.info(
+                            f"▶ Menerima command /start dari chat_id={chat_id}"
+                        )
                         # Memicu run_full_task di thread terpisah
-                        threading.Thread(target=run_full_task, args=([str(chat_id)],)).start()
+                        threading.Thread(
+                            target=run_full_task, args=([str(chat_id)],)
+                        ).start()
 
                     elif text.lower() == "/showtime":
-                        logging.info(f"▶ Menerima command /showtime dari chat_id={chat_id}")
-                        threading.Thread(target=handle_showtime, args=(chat_id,)).start()
+                        logging.info(
+                            f"▶ Menerima command /showtime dari chat_id={chat_id}"
+                        )
+                        threading.Thread(
+                            target=handle_showtime, args=(chat_id,)
+                        ).start()
 
                     elif text.lower() == "/settime":
-                        logging.info(f"▶ Menerima command /settime dari chat_id={chat_id}")
+                        logging.info(
+                            f"▶ Menerima command /settime dari chat_id={chat_id}"
+                        )
                         threading.Thread(target=handle_settime, args=(chat_id,)).start()
 
                     elif text.lower() == "/deltime":
-                        logging.info(f"▶ Menerima command /deltime dari chat_id={chat_id}")
+                        logging.info(
+                            f"▶ Menerima command /deltime dari chat_id={chat_id}"
+                        )
                         threading.Thread(target=handle_deltime, args=(chat_id,)).start()
 
                     elif text.lower() == "/help":
@@ -847,9 +1012,20 @@ def listen_for_commands():
                         threading.Thread(target=handle_help, args=(chat_id,)).start()
 
                     # Handle input waktu dari user yang sedang dalam proses settime
-                    elif chat_id in user_states and user_states[chat_id].get("action") == "settime_input":
-                        logging.info(f"▶ Menerima input waktu dari chat_id={chat_id}: '{text}'")
-                        threading.Thread(target=handle_time_input, args=(chat_id, text.strip(),)).start()
+                    elif (
+                        chat_id in user_states
+                        and user_states[chat_id].get("action") == "settime_input"
+                    ):
+                        logging.info(
+                            f"▶ Menerima input waktu dari chat_id={chat_id}: '{text}'"
+                        )
+                        threading.Thread(
+                            target=handle_time_input,
+                            args=(
+                                chat_id,
+                                text.strip(),
+                            ),
+                        ).start()
 
         except requests.exceptions.Timeout:
             pass
@@ -868,7 +1044,9 @@ def run_scheduler():
     while True:
         schedule.run_pending()
         next_run = schedule.next_run()
-        current_next_run_str = format_datetime_with_wib(next_run) if next_run else 'Tidak ada'
+        current_next_run_str = (
+            format_datetime_with_wib(next_run) if next_run else "Tidak ada"
+        )
 
         if current_next_run_str != last_next_run_str:
             logging.info(f"⏭️ Jadwal berikutnya: {current_next_run_str}")
@@ -883,17 +1061,27 @@ if __name__ == "__main__":
 
     try:
         logging.info("⚙️ Memastikan Playwright Chromium terinstal...")
-        result = subprocess.run(["playwright", "install", "chromium"], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["playwright", "install", "chromium"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
         logging.info(result.stdout)
         logging.info("✅ Playwright Chromium siap.")
     except FileNotFoundError:
-        logging.error("❌ Perintah 'playwright' tidak ditemukan. Pastikan Playwright terinstal dan berada di PATH.")
         logging.error(
-            "Coba jalankan 'pip install playwright' lalu 'playwright install chromium' secara manual di terminal.")
+            "❌ Perintah 'playwright' tidak ditemukan. Pastikan Playwright terinstal dan berada di PATH."
+        )
+        logging.error(
+            "Coba jalankan 'pip install playwright' lalu 'playwright install chromium' secara manual di terminal."
+        )
         exit(1)
     except subprocess.CalledProcessError as e:
         logging.error(f"❌ Gagal menginstal Playwright Chromium: {e.stderr}")
-        logging.error("Pastikan Node.js dan npm terinstal, atau instal Playwright secara manual.")
+        logging.error(
+            "Pastikan Node.js dan npm terinstal, atau instal Playwright secara manual."
+        )
         exit(1)
 
 
