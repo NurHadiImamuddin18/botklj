@@ -23,7 +23,7 @@ GROUP_TARGETS = {
     ],
     "Produktifitas Teknisi PSB Klojen": ["-1002755104290"],
     # LAPHAR KLOJEN
-    "unspec B2C Klojen": ["-1002033158680"],
+    "Unspec B2C Klojen": ["-1002033158680"],
     "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680"],
     "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong": [
         "-1002033158680"
@@ -861,7 +861,7 @@ def run_full_task(target_chat_ids=None):
                     (
                         "D9:J23",
                         "sheet_click_1.png",
-                        "unspec B2C Klojen",
+                        "Unspec B2C Klojen",
                     ),
                 ]
                 for range_value, filename, caption in sheet_steps:
