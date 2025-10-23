@@ -10,7 +10,6 @@ import json
 import subprocess
 import requests
 import logging
-from PIL import Image
 import io
 
 
