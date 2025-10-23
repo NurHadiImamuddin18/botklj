@@ -1230,8 +1230,7 @@ def schedule_imjas_malang_wib():
         try:
             schedule.every().day.at(local_time).do(run_imjas_malang_capture)
             logging.info(
-                f"🗓️ Jadwal IMJAS MALANG ditambahkan: {wib_time} WIB "
-                f"({utc_time} UTC → {local_time} server)"
+                f"🗓️ Jadwal IMJAS MALANG ditambahkan: {wib_time} WIB ({utc_time} UTC → {local_time} server)"
             )
         except Exception as e:
             logging.warning(
@@ -1289,14 +1288,17 @@ if __name__ == "__main__":
     # 🔹 Tambahkan jadwal tetap untuk UNSPEC KLIRING (jam 10 & 22 WIB)
     schedule_unspec_kliring_wib()
 
+    # 🔹 Tambahkan jadwal tetap untuk IMJAS MALANG (jam 10 WIB)
+    schedule_imjas_malang_wib()  # 🔥 Tambahkan baris ini
+
     # 🔹 Jalankan listener & scheduler thread
     listener_thread = threading.Thread(target=listen_for_commands, daemon=True)
-    listener_thread.setName("TelegramListener")
+    listener_thread.name = "TelegramListener"  # ganti setName() -> name =
     listener_thread.start()
     logging.info("✅ Thread Telegram Listener dimulai.")
 
     scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
-    scheduler_thread.setName("SchedulerLoop")
+    scheduler_thread.name = "SchedulerLoop"
     scheduler_thread.start()
     logging.info("✅ Thread Scheduler dimulai.")
 
