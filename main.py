@@ -10,6 +10,8 @@ import json
 import subprocess
 import requests
 import logging
+from PIL import Image
+import io
 
 
 TELEGRAM_BOT_TOKEN = "7965696771:AAEG8DLoUOcdIVdqG4IIyAxL5j2Aa6k_v4w"
@@ -27,6 +29,9 @@ GROUP_TARGETS = {
     "KLOJEN - UNSPEC (KLIRING)": ["-1002033158680"],
     "TICKET CLOSED MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong": [
         "-1002033158680"
+    ],
+    "IMJAS MALANG @rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong": [
+        "-4801312301",
     ],
 }
 
@@ -582,6 +587,42 @@ def run_unspec_kliring_only():
             send_message(chat_id, f"⚠️ Gagal mengambil screenshot UNSPEC KLIRING: {e}")
 
 
+def run_imjas_malang_capture():
+    logging.info("➡️ Menjalankan capture IMJAS MALANG jam 10 WIB...")
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                device_scale_factor=2,
+            )
+            page = context.new_page()
+
+            SHEET_URL = "https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=206552414"
+            MENTION_LIST = (
+                "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"
+            )
+            CHAT_ID = "-1002033158680"
+
+            page.goto(SHEET_URL, timeout=90000)
+            time.sleep(5)
+            page.evaluate("document.body.style.zoom='90%'")
+            time.sleep(1)
+
+            # Screenshot dan crop
+            screenshot_path = "imjas_malang.png"
+            page.screenshot(path=screenshot_path, full_page=True)
+
+            caption = f"IMJAS MALANG 2025\n{MENTION_LIST}"
+            send_screenshot_to_telegram(screenshot_path, caption, [CHAT_ID])
+            logging.info("✅ IMJAS MALANG 2025 berhasil dikirim ke grup LAPHAR")
+
+    except Exception as e:
+        logging.error(f"❌ Gagal capture: {e}")
+        send_message(CHAT_ID, f"⚠️ Gagal capture IMJAS MALANG jam 10 WIB\nError: {e}")
+
+
 # --- Fungsi utama pengambilan screenshot ---
 def run_full_task(target_chat_ids=None):
     global is_running
@@ -613,6 +654,98 @@ def run_full_task(target_chat_ids=None):
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
+            # === Screenshot Google Sheets (IMJAS MALANG - Range A4:AE21, Auto Crop) ===
+            logging.info("➡️ Mengambil screenshot IMJAS MALANG (Range A4:AE21)...")
+            context_imjas = None
+            page_imjas = None
+
+            try:
+                context_imjas = browser.new_context(
+                    viewport={"width": 1920, "height": 1080},
+                    device_scale_factor=2,
+                )
+                page_imjas = context_imjas.new_page()
+
+                SHEET_URL = (
+                    "https://docs.google.com/spreadsheets/d/"
+                    "1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/"
+                    "edit?gid=206552414#gid=206552414"
+                )
+
+                MENTION_LIST = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"
+                TICKET_CHAT_IDS = [
+                    "-1002033158680",
+                ]
+
+                # === Buka sheet dan tunggu siap ===
+                page_imjas.goto(SHEET_URL, timeout=90000)
+                page_imjas.wait_for_selector("#t-formula-bar-input", timeout=40000)
+                time.sleep(5)
+
+                # === Zoom agar range terlihat penuh ===
+                page_imjas.evaluate("document.body.style.zoom='90%'")
+                time.sleep(1.2)
+
+                # Scroll awal ke pojok kiri atas
+                page_imjas.evaluate("window.scrollTo(0, 0)")
+                time.sleep(0.8)
+
+                # Estimasi posisi kolom AE dan baris 21
+                target_col_index = 31
+                estimated_col_width = 110
+                total_width = target_col_index * estimated_col_width + 300
+                total_height = 800
+
+                # Sesuaikan viewport agar muat seluruh range
+                page_imjas.set_viewport_size(
+                    {"width": min(total_width, 3840), "height": 1080}
+                )
+                page_imjas.evaluate(f"window.scrollTo({total_width}, {total_height})")
+                time.sleep(1)
+
+                # === Screenshot panorama penuh ===
+                screenshot_path = "imjas_malang_panorama_full.png"
+                page_imjas.screenshot(path=screenshot_path, full_page=True)
+                logging.info(f"✅ Screenshot panorama tersimpan: {screenshot_path}")
+
+                # === Crop otomatis area range A4:AE21 ===
+                from PIL import Image
+
+                img = Image.open(screenshot_path)
+                w, h = img.size
+
+                # Hitung area crop otomatis berdasarkan range A4:AE21
+                col_start = 85
+                col_end = 31 * 166
+                row_start = 520
+                row_height = (25 - 10 + 3) * 40
+
+                left = col_start
+                top = row_start
+                right = min(w, col_end)
+                bottom = min(h, top + row_height)
+
+                cropped = img.crop((left, top, right, bottom))
+                cropped_path = "imjas_malang_panorama_crop_a4_ae21.png"
+                cropped.save(cropped_path, optimize=True, quality=85)
+                logging.info(
+                    f"✂️ Gambar berhasil di-crop ke range A4:AE21: {cropped_path}"
+                )
+
+                # === Kirim hasil crop ke Telegram ===
+                caption = f"IMJAS MALANG 2025\n" f"{MENTION_LIST}"
+                send_screenshot_to_telegram(cropped_path, caption, TICKET_CHAT_IDS)
+
+            except Exception as e_imjas:
+                logging.error(f"❌ Gagal mengambil screenshot IMJAS MALANG: {e_imjas}")
+                send_message(
+                    "-4801312301",
+                    f"⚠️ Error capture IMJAS MALANG A4–AE21: {e_imjas}",
+                )
+
+            finally:
+                if context_imjas:
+                    context_imjas.close()
 
             # === Screenshot Ticket Closed Malang (langsung HSA KLJ) ===
             logging.info("➡️ Mengambil screenshot Ticket Closed Malang...")
