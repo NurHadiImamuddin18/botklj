@@ -549,6 +549,43 @@ def handle_time_input(chat_id, time_input):
     user_states.pop(chat_id, None)
 
 
+# --- Fungsi khusus untuk capture IMJAS MALANG ---
+def run_imjas_malang_capture():
+    logging.info("➡️ Menjalankan capture IMJAS MALANG jam 10 WIB...")
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                device_scale_factor=2,
+            )
+            page = context.new_page()
+
+            SHEET_URL = "https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=206552414"
+            MENTION_LIST = (
+                "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"
+            )
+            CHAT_ID = "-1002033158680"
+
+            page.goto(SHEET_URL, timeout=90000)
+            time.sleep(5)
+            page.evaluate("document.body.style.zoom='90%'")
+            time.sleep(1)
+
+            # Screenshot dan crop
+            screenshot_path = "imjas_malang.png"
+            page.screenshot(path=screenshot_path, full_page=True)
+
+            caption = f"IMJAS MALANG 2025\n{MENTION_LIST}"
+            send_screenshot_to_telegram(screenshot_path, caption, [CHAT_ID])
+            logging.info("✅ IMJAS MALANG 2025 berhasil dikirim ke grup LAPHAR")
+
+    except Exception as e:
+        logging.error(f"❌ Gagal capture: {e}")
+        send_message(CHAT_ID, f"⚠️ Gagal capture IMJAS MALANG jam 10 WIB\nError: {e}")
+
+
 # --- Fungsi khusus untuk capture UNSPEC KLIRING KLOJEN ---
 def run_unspec_kliring_only():
     logging.info("➡️ Menjalankan task khusus UNSPEC KLIRING KLOJEN (jam 10 WIB)...")
@@ -584,42 +621,6 @@ def run_unspec_kliring_only():
         logging.error(f"❌ Gagal kirim UNSPEC KLIRING: {e}")
         for chat_id in ["-1002033158680"]:
             send_message(chat_id, f"⚠️ Gagal mengambil screenshot UNSPEC KLIRING: {e}")
-
-
-def run_imjas_malang_capture():
-    logging.info("➡️ Menjalankan capture IMJAS MALANG jam 10 WIB...")
-
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                viewport={"width": 1920, "height": 1080},
-                device_scale_factor=2,
-            )
-            page = context.new_page()
-
-            SHEET_URL = "https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=206552414"
-            MENTION_LIST = (
-                "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"
-            )
-            CHAT_ID = "-1002033158680"
-
-            page.goto(SHEET_URL, timeout=90000)
-            time.sleep(5)
-            page.evaluate("document.body.style.zoom='90%'")
-            time.sleep(1)
-
-            # Screenshot dan crop
-            screenshot_path = "imjas_malang.png"
-            page.screenshot(path=screenshot_path, full_page=True)
-
-            caption = f"IMJAS MALANG 2025\n{MENTION_LIST}"
-            send_screenshot_to_telegram(screenshot_path, caption, [CHAT_ID])
-            logging.info("✅ IMJAS MALANG 2025 berhasil dikirim ke grup LAPHAR")
-
-    except Exception as e:
-        logging.error(f"❌ Gagal capture: {e}")
-        send_message(CHAT_ID, f"⚠️ Gagal capture IMJAS MALANG jam 10 WIB\nError: {e}")
 
 
 # --- Fungsi utama pengambilan screenshot ---
@@ -1213,6 +1214,29 @@ if __name__ == "__main__":
             "Pastikan Node.js dan npm terinstal, atau instal Playwright secara manual."
         )
         exit(1)
+
+
+# === Jadwal otomatis tetap untuk IMJAS MALANG (10:00 WIB) ===
+def schedule_imjas_malang_wib():
+    """
+    Menjadwalkan pengiriman IMJAS MALANG jam 10:00 WIB,
+    dikonversi otomatis ke UTC agar sesuai waktu server.
+    """
+    target_times_wib = ["10:00"]
+
+    for wib_time in target_times_wib:
+        utc_time = wib_to_utc(wib_time)
+        local_time = utc_to_server_local_str(utc_time)
+        try:
+            schedule.every().day.at(local_time).do(run_imjas_malang_capture)
+            logging.info(
+                f"🗓️ Jadwal IMJAS MALANG ditambahkan: {wib_time} WIB "
+                f"({utc_time} UTC → {local_time} server)"
+            )
+        except Exception as e:
+            logging.warning(
+                f"⚠️ Gagal menambahkan jadwal IMJAS MALANG untuk {wib_time} WIB: {e}"
+            )
 
 
 # === Jadwal otomatis tetap untuk UNSPEC KLIRING KLOJEN (10:00 WIB) ===
