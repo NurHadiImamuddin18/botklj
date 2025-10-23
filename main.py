@@ -549,78 +549,112 @@ def handle_time_input(chat_id, time_input):
     user_states.pop(chat_id, None)
 
 
-# --- Fungsi khusus untuk capture IMJAS MALANG ---
-def run_imjas_malang_capture():
-    logging.info("➡️ Menjalankan capture IMJAS MALANG jam 10 WIB...")
+# --- Fungsi gabungan: Capture IMJAS MALANG + UNSPEC KLIRING ---
+def run_capture_imjas_dan_kliring():
+    logging.info("➡️ Menjalankan capture IMJAS MALANG & UNSPEC KLIRING jam 10 WIB...")
 
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                viewport={"width": 1920, "height": 1080},
-                device_scale_factor=2,
-            )
-            page = context.new_page()
 
-            SHEET_URL = "https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=206552414"
-            MENTION_LIST = (
-                "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"
-            )
-            CHAT_ID = "-1002033158680"
+            # ======== BAGIAN 1: IMJAS MALANG ========
+            try:
+                logging.info("📊 [1/2] Mulai capture IMJAS MALANG...")
+                context_imjas = browser.new_context(
+                    viewport={"width": 1920, "height": 1080},
+                    device_scale_factor=2,
+                )
+                page_imjas = context_imjas.new_page()
 
-            page.goto(SHEET_URL, timeout=90000)
-            time.sleep(5)
-            page.evaluate("document.body.style.zoom='90%'")
-            time.sleep(1)
+                SHEET_URL_IMJAS = (
+                    "https://docs.google.com/spreadsheets/d/"
+                    "1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=206552414"
+                )
+                MENTION_LIST_IMJAS = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"
+                CHAT_ID_IMJAS = "-1002033158680"
 
-            # Screenshot dan crop
-            screenshot_path = "imjas_malang.png"
-            page.screenshot(path=screenshot_path, full_page=True)
+                page_imjas.goto(SHEET_URL_IMJAS, timeout=90000)
+                time.sleep(5)
+                page_imjas.evaluate("document.body.style.zoom='90%'")
+                time.sleep(1)
 
-            caption = f"IMJAS MALANG 2025\n{MENTION_LIST}"
-            send_screenshot_to_telegram(screenshot_path, caption, [CHAT_ID])
-            logging.info("✅ IMJAS MALANG 2025 berhasil dikirim ke grup LAPHAR")
+                screenshot_path_imjas = "imjas_malang.png"
+                page_imjas.screenshot(path=screenshot_path_imjas, full_page=True)
 
-    except Exception as e:
-        logging.error(f"❌ Gagal capture: {e}")
-        send_message(CHAT_ID, f"⚠️ Gagal capture IMJAS MALANG jam 10 WIB\nError: {e}")
+                caption_imjas = f"IMJAS MALANG 2025\n{MENTION_LIST_IMJAS}"
+                send_screenshot_to_telegram(
+                    screenshot_path_imjas, caption_imjas, [CHAT_ID_IMJAS]
+                )
 
+                logging.info("✅ IMJAS MALANG 2025 berhasil dikirim ke grup LAPHAR")
 
-# --- Fungsi khusus untuk capture UNSPEC KLIRING KLOJEN ---
-def run_unspec_kliring_only():
-    logging.info("➡️ Menjalankan task khusus UNSPEC KLIRING KLOJEN (jam 10 WIB)...")
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context()
-            page = context.new_page()
+            except Exception as e_imjas:
+                logging.error(f"❌ Gagal capture IMJAS MALANG: {e_imjas}")
+                send_message(
+                    "-1002033158680",
+                    f"⚠️ Gagal capture IMJAS MALANG jam 10 WIB\nError: {e_imjas}",
+                )
+            finally:
+                try:
+                    context_imjas.close()
+                except Exception:
+                    pass
 
-            # Ambil range KLIRING (D30:I44)
-            page.goto(
-                "https://docs.google.com/spreadsheets/d/1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=1872895195&range=D30:I44",
-                timeout=75000,
-                wait_until="domcontentloaded",
-            )
-            time.sleep(15)
+            # ======== BAGIAN 2: UNSPEC KLIRING KLOJEN ========
+            try:
+                logging.info("📄 [2/2] Mulai capture UNSPEC KLIRING KLOJEN...")
+                context_kliring = browser.new_context()
+                page_kliring = context_kliring.new_page()
 
-            element = page.locator("#scrollable_right_0 > div:nth-child(2) > div").first
-            element.wait_for(state="visible", timeout=15000)
+                SHEET_URL_KLIRING = (
+                    "https://docs.google.com/spreadsheets/d/"
+                    "1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/"
+                    "edit?gid=1872895195&range=D30:I44"
+                )
+                CHAT_ID_KLIRING = "-1002033158680"
+                CAPTION_KLIRING = "KLOJEN - UNSPEC (KLIRING)"
 
-            filename = "unspec_kliring.png"
-            element.screenshot(path=filename)
+                page_kliring.goto(
+                    SHEET_URL_KLIRING, timeout=75000, wait_until="domcontentloaded"
+                )
+                time.sleep(15)
 
-            caption = "KLOJEN - UNSPEC (KLIRING)"
-            target_ids = ["-1002033158680"]  # LAPHAR KLOJEN
+                element = page_kliring.locator(
+                    "#scrollable_right_0 > div:nth-child(2) > div"
+                ).first
+                element.wait_for(state="visible", timeout=15000)
 
-            send_screenshot_to_telegram(filename, caption, target_ids)
-            context.close()
-            browser.close()
+                filename_kliring = "unspec_kliring.png"
+                element.screenshot(path=filename_kliring)
 
-            logging.info("✅ UNSPEC KLIRING KLOJEN berhasil dikirim ke grup LAPHAR")
-    except Exception as e:
-        logging.error(f"❌ Gagal kirim UNSPEC KLIRING: {e}")
-        for chat_id in ["-1002033158680"]:
-            send_message(chat_id, f"⚠️ Gagal mengambil screenshot UNSPEC KLIRING: {e}")
+                send_screenshot_to_telegram(
+                    filename_kliring, CAPTION_KLIRING, [CHAT_ID_KLIRING]
+                )
+
+                logging.info("✅ UNSPEC KLIRING KLOJEN berhasil dikirim ke grup LAPHAR")
+
+            except Exception as e_kliring:
+                logging.error(f"❌ Gagal capture UNSPEC KLIRING: {e_kliring}")
+                send_message(
+                    "-1002033158680",
+                    f"⚠️ Gagal mengambil screenshot UNSPEC KLIRING: {e_kliring}",
+                )
+            finally:
+                try:
+                    context_kliring.close()
+                except Exception:
+                    pass
+
+            # ======== Penutupan browser utama ========
+            try:
+                browser.close()
+            except Exception:
+                pass
+
+            logging.info("🏁 Semua capture jam 10 WIB selesai.")
+
+    except Exception as e_main:
+        logging.error(f"💥 Error fatal pada run_capture_imjas_dan_kliring: {e_main}")
 
 
 # --- Fungsi utama pengambilan screenshot ---
@@ -654,6 +688,7 @@ def run_full_task(target_chat_ids=None):
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
+
             # === Screenshot Google Sheets (IMJAS MALANG - Range A4:AE21, Auto Crop) ===
             logging.info("➡️ Mengambil screenshot IMJAS MALANG (Range A4:AE21)...")
             context_imjas = None
@@ -741,7 +776,7 @@ def run_full_task(target_chat_ids=None):
                 logging.error(f"❌ Gagal mengambil screenshot IMJAS MALANG: {e_imjas}")
                 send_message(
                     "-4801312301",
-                    f"⚠️ Error capture IMJAS MALANG A4–AE21: {e_imjas}",
+                    "-1002033158680" f"⚠️ Error capture IMJAS MALANG A4–AE21: {e_imjas}",
                 )
 
             finally:
@@ -1217,11 +1252,9 @@ if __name__ == "__main__":
         exit(1)
 
 
-# === Jadwal otomatis tetap untuk IMJAS MALANG (10:00 WIB) ===
-def schedule_imjas_malang_wib():
+def schedule_imjas_dan_kliring_wib():
     """
-    Menjadwalkan pengiriman IMJAS MALANG jam 10:00 WIB,
-    dikonversi otomatis ke UTC agar sesuai waktu server.
+    Menjadwalkan capture gabungan IMJAS MALANG dan UNSPEC KLIRING KLOJEN jam 10 WIB.
     """
     target_times_wib = ["10:00"]
 
@@ -1229,35 +1262,14 @@ def schedule_imjas_malang_wib():
         utc_time = wib_to_utc(wib_time)
         local_time = utc_to_server_local_str(utc_time)
         try:
-            schedule.every().day.at(local_time).do(run_imjas_malang_capture)
+            schedule.every().day.at(local_time).do(run_capture_imjas_dan_kliring)
             logging.info(
-                f"🗓️ Jadwal IMJAS MALANG ditambahkan: {wib_time} WIB ({utc_time} UTC → {local_time} server)"
+                f"🗓️ Jadwal gabungan (IMJAS + KLIRING) ditambahkan: "
+                f"{wib_time} WIB ({utc_time} UTC → {local_time} server)"
             )
         except Exception as e:
             logging.warning(
-                f"⚠️ Gagal menambahkan jadwal IMJAS MALANG untuk {wib_time} WIB: {e}"
-            )
-
-
-# === Jadwal otomatis tetap untuk UNSPEC KLIRING KLOJEN (10:00 WIB) ===
-def schedule_unspec_kliring_wib():
-    """
-    Menjadwalkan pengiriman UNSPEC KLIRING jam 10:00 WIB,
-    dikonversi otomatis ke UTC agar sesuai dengan waktu server.
-    """
-    target_times_wib = ["10:00"]
-
-    for wib_time in target_times_wib:
-        utc_time = wib_to_utc(wib_time)
-        local_time = utc_to_server_local_str(utc_time)
-        try:
-            schedule.every().day.at(local_time).do(run_unspec_kliring_only)
-            logging.info(
-                f"🗓️ Jadwal UNSPEC KLIRING ditambahkan: {wib_time} WIB ({utc_time} UTC → {local_time} server)"
-            )
-        except Exception as e:
-            logging.warning(
-                f"⚠️ Gagal menambahkan jadwal UNSPEC KLIRING untuk {wib_time} WIB: {e}"
+                f"⚠️ Gagal menambahkan jadwal gabungan untuk {wib_time} WIB: {e}"
             )
 
 
@@ -1286,11 +1298,8 @@ if __name__ == "__main__":
     # 🔹 Setup semua jadwal dari database bot
     setup_schedule()
 
-    # 🔹 Tambahkan jadwal tetap untuk UNSPEC KLIRING (jam 10 & 22 WIB)
-    schedule_unspec_kliring_wib()
-
-    # 🔹 Tambahkan jadwal tetap untuk IMJAS MALANG (jam 10 WIB)
-    schedule_imjas_malang_wib()  # 🔥 Tambahkan baris ini
+    # 🔹 Tambahkan jadwal gabungan jam 10 WIB
+    schedule_imjas_dan_kliring_wib()
 
     # 🔹 Jalankan listener & scheduler thread
     listener_thread = threading.Thread(target=listen_for_commands, daemon=True)
