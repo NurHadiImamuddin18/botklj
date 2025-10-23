@@ -1,4 +1,4 @@
 requests
 schedule
 playwright
-chromium
+Pillow

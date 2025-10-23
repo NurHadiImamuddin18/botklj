@@ -11,7 +11,7 @@ import subprocess
 import requests
 import logging
 import io
-
+from PIL import Image
 
 TELEGRAM_BOT_TOKEN = "7965696771:AAEG8DLoUOcdIVdqG4IIyAxL5j2Aa6k_v4w"
 TELEGRAM_CHAT_IDS = ["-1002755104290", "-1002033158680", "-4801312301"]
@@ -675,6 +675,7 @@ def run_full_task(target_chat_ids=None):
                 MENTION_LIST = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"
                 TICKET_CHAT_IDS = [
                     "-1002033158680",
+                    "-4801312301",
                 ]
 
                 # === Buka sheet dan tunggu siap ===
