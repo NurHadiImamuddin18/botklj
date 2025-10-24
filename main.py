@@ -557,9 +557,9 @@ def run_capture_imjas_dan_kliring():
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
 
-            # ======== BAGIAN 1: IMJAS MALANG ========
+            # ======== BAGIAN 1: IMJAS MALANG (Auto Crop + Jam Capture) ========
             try:
-                logging.info("📊 [1/2] Mulai capture IMJAS MALANG...")
+                logging.info("📊 [1/2] Mulai capture IMJAS MALANG (Auto Crop)...")
                 context_imjas = browser.new_context(
                     viewport={"width": 1920, "height": 1080},
                     device_scale_factor=2,
@@ -571,22 +571,49 @@ def run_capture_imjas_dan_kliring():
                     "1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/edit?gid=206552414"
                 )
                 MENTION_LIST_IMJAS = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"
-                CHAT_ID_IMJAS = "-1002033158680"
+                CHAT_ID_IMJAS = ["-1002033158680", "-4801312301"]
 
+                # === Buka Sheet ===
                 page_imjas.goto(SHEET_URL_IMJAS, timeout=90000)
+                page_imjas.wait_for_selector("#t-formula-bar-input", timeout=40000)
                 time.sleep(5)
+
+                # === Atur zoom dan posisi awal ===
                 page_imjas.evaluate("document.body.style.zoom='90%'")
-                time.sleep(1)
+                time.sleep(1.2)
+                page_imjas.evaluate("window.scrollTo(0, 0)")
+                time.sleep(0.8)
 
-                screenshot_path_imjas = "imjas_malang.png"
-                page_imjas.screenshot(path=screenshot_path_imjas, full_page=True)
+                # === Screenshot full ===
+                screenshot_path = "imjas_malang_panorama_full.png"
+                page_imjas.screenshot(path=screenshot_path, full_page=True)
+                logging.info(f"✅ Screenshot tersimpan: {screenshot_path}")
 
-                caption_imjas = f"IMJAS MALANG 2025\n{MENTION_LIST_IMJAS}"
-                send_screenshot_to_telegram(
-                    screenshot_path_imjas, caption_imjas, [CHAT_ID_IMJAS]
-                )
+                # === Crop otomatis area A4:AE21 ===
 
-                logging.info("✅ IMJAS MALANG 2025 berhasil dikirim ke grup LAPHAR")
+                img = Image.open(screenshot_path)
+                w, h = img.size
+
+                # Sesuaikan area crop sesuai range
+                col_start = 85
+                col_end = 31 * 166
+                row_start = 520
+                row_height = (25 - 10 + 3) * 40
+
+                left = col_start
+                top = row_start
+                right = min(w, col_end)
+                bottom = min(h, top + row_height)
+
+                cropped = img.crop((left, top, right, bottom))
+                cropped_path = "imjas_malang_crop_a4_ae21.png"
+                cropped.save(cropped_path, optimize=True, quality=85)
+                logging.info(f"✂️ Gambar berhasil di-crop: {cropped_path}")
+
+                # === Kirim hasil ke Telegram ===
+                caption = f"IMJAS MALANG 2025\n{MENTION_LIST_IMJAS}"
+                send_screenshot_to_telegram(cropped_path, caption, CHAT_ID_IMJAS)
+                logging.info("✅ IMJAS MALANG 2025 berhasil dikirim ke grup Telegram")
 
             except Exception as e_imjas:
                 logging.error(f"❌ Gagal capture IMJAS MALANG: {e_imjas}")
@@ -611,7 +638,7 @@ def run_capture_imjas_dan_kliring():
                     "1gcprpyHpjuG8QzklpfgWk8hrV5dlAX3aKf-ZQmOM_IU/"
                     "edit?gid=1872895195&range=D30:I44"
                 )
-                CHAT_ID_KLIRING = "-1002033158680"
+                CHAT_ID_KLIRING = "-1002033158680", "-4801312301"
                 CAPTION_KLIRING = "KLOJEN - UNSPEC (KLIRING)"
 
                 page_kliring.goto(
@@ -688,7 +715,6 @@ def run_full_task(target_chat_ids=None):
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
-
             # === Screenshot Google Sheets (IMJAS MALANG - Range A4:AE21, Auto Crop) ===
             logging.info("➡️ Mengambil screenshot IMJAS MALANG (Range A4:AE21)...")
             context_imjas = None
