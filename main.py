@@ -572,7 +572,6 @@ def run_capture_imjas_dan_kliring():
                     "edit?gid=206552414#gid=206552414"
                 )
 
-                MENTION_LIST = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"
                 TICKET_CHAT_IDS = ["-1002033158680", "-4801312301"]
 
                 # === Buka sheet dan tunggu siap ===
@@ -631,7 +630,7 @@ def run_capture_imjas_dan_kliring():
                 )
 
                 # === Kirim hasil crop ke Telegram ===
-                caption = f"IMJAS MALANG 2025\n{MENTION_LIST}"
+                caption = "IMJAS MALANG 2025"
                 send_screenshot_to_telegram(cropped_path, caption, TICKET_CHAT_IDS)
                 logging.info("✅ IMJAS MALANG 2025 berhasil dikirim ke grup Telegram")
 
