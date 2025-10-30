@@ -749,7 +749,9 @@ def run_full_task(target_chat_ids=None):
             )
             page_ticket = context_ticket.new_page()
 
-            MENTION_LIST = "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @Yna_as @chukong"
+            MENTION_LIST = (
+                "@rolimartin @JackSpaarroww @firdausmulia @YantiMohadi @b1yant @chukong"
+            )
             TICKET_CHAT_IDS = [
                 "-1002033158680",
                 "-4801312301",
